@@ -1,0 +1,1261 @@
+class "Тестирование проекта КЛАДР";
+import СИС2 classes файл;
+import classes Библио.ТБ69;
+inclass
+
+const sExtPrompt:String="Архив ТВС|*.tbc|Архив ТВD|*.tbd|Архив XML|*.xml|Архив CDF|*.cdf|Архив CRD|*.crd";
+const cSocrBaseFileName:String="SOCRBASE.DBF";
+const cKladrFileName:String="KLADR.DBF";
+const cStreetFileName:String="STREET.DBF";
+const cAltNamesFileName:String="ALTNAMES.DBF";
+const cDomaFileName:String="DOMA.DBF";
+const cFlatFileName:String="FLAT.DBF";
+
+sKladrFileName: String;
+sStreetFileName: String;
+sSocrbaseFileName: String;
+sDBFFileName: String;
+sCSVFileName: String;
+oStopWatch: UserObject;
+
+sZipFileName: String;
+sUnZipFileName: String;
+sUnZipFolderName: String;
+
+type EIType = (TBC=1, TBD, XML, CDF, CRD);
+eiTypeValue: eiType; -- тип экспорта/импорта
+sTypeValue:string[]=["TBC","TBD","XML","CDF","CRD"];
+
+type ftKLADR = (ftKLADR_KLADR=1, ftKLADR_STREET, ftKLADR_SOCRBASE, ftKLADR_ALTNAMES,
+                      ftKLADR_DOMA, ftKLADR_FLAT);
+
+inobject
+
+-- Записи
+-- Базовый.Классификаторы.РегионИГород   -- kladr.dbf
+-- Базовый.Классификаторы.Улица          -- street.dbf
+-- Базовый.Классификаторы.Переименование -- altnames.dbf
+-- Базовый.Классификаторы.Сокращение     -- socrbase.dbf
+
+-- картотеки
+--ТББ_Базовый.Справочники.расшкартАдрес
+--ТББ_Базовый.Справочники.картАдресФЛ
+--ТББ_Базовый.Справочники.картАдресЮЛ
+--Базовый.Справочники.картАдрес
+
+-- бланки
+--Базовый.Справочники.редАдрес
+--АдресК.Справочники.редАдрес
+--ТББ_Базовый.Справочники.Субъект.Контрагент.РедАдрес
+--ТББ_Базовый.Справочники.Субъект.Контрагент.РедАдреса
+--ТББ_Базовый.Справочники.Субъект.ФизЛицо.РедАдрес
+
+iTab: Integer; -- переключатель закладок
+FrTitul: TemplateFrame;
+FrTab: TemplateFrame;
+FrPage1: TemplateFrame;
+FrPage2: TemplateFrame;
+FrPage3: TemplateFrame;
+FrPage4: TemplateFrame;
+frPage5: TemplateFrame;
+frPage6: TemplateFrame;
+frPage7: TemplateFrame;
+oBtImpKladr: Button;
+oBtImpStreet: Button;
+oBtImpSocrbase: Button;
+oBtExpKladr: Button;
+oBtExpStreet: Button;
+oBtExpSocrbase: Button;
+oBtSW: Button;
+oBtDbf2CSV: Button;
+oBtDelSocrbase: Button;
+oBtDelKladr: Button;
+oBtDelStreet: Button;
+oBtTestUnZip: Button;
+oBtLoadSocrBase: Button;
+oBtLoadStreet: Button;
+oBtLoadKladr: Button;
+oBtTestMsg: Button;
+oBtTestFormat: Button;
+oBtTestFormatLog: Button;
+oBtTestSQL: Button;
+oBtGetSQLServerName: Button;
+--------------------------------------------------------------------------------
+--{ Обработчики событий бланка
+
+  proc oBtOnClick(Sender :Button);
+  if Sender.name="oBtBaseLoadKladr":
+   ОткрытьБланк('Базовый.Сервис.блЗагрузкаКлассификаторов');
+  elsif Sender.name="oBtEdAddressBase":
+   ОткрытьБланк('Базовый.Справочники.редАдрес');
+  elsif Sender.name="oBtEdAddressAddress":
+   ОткрытьБланк('АдресК.Справочники.редАдрес');
+  #if version<9.5 then
+  elsif Sender.name="oBtEdAddressТББAddress":
+   ОткрытьБланк('ТББ_Базовый.Справочники.Субъект.Контрагент.РедАдрес');
+  elsif Sender.name="oBtEdAddressТББAddressa":
+   ОткрытьБланк('ТББ_Базовый.Справочники.Субъект.Контрагент.РедАдреса');
+  elsif Sender.name="oBtEdAddressТББAddressF":
+   ОткрытьБланк('ТББ_Базовый.Справочники.Субъект.ФизЛицо.РедАдрес');
+  #end
+  elsif Sender.name="oBtCardAddress":
+   ОткрытьБланк('Базовый.Справочники.картАдрес');
+  elsif Sender.name="oBtCardAddressTbb":
+   --ОткрытьБланк('ТББ_Базовый.Справочники.расшкартАдрес');
+  #if version<9.5 then
+  elsif Sender.name="oBtCardAddressTbbF":
+   ОткрытьБланк('ТББ_Базовый.Справочники.картАдресФЛ');
+  elsif Sender.name="oBtCardAddressTbbU":
+   ОткрытьБланк('ТББ_Базовый.Справочники.картАдресЮЛ');
+  #end
+  elsif Sender.name="oBtInfobaseExplorer":
+   ExecuteCommand("Kernel.Service.InfobaseExplorer");
+  elsif Sender.name="oBtImpKladr":
+   ИмпортЗаписейКладр("Базовый.Классификаторы.РегионИГород",sKladrFileName,eiTypeValue);
+  elsif Sender.name="oBtImpStreet":
+   ИмпортЗаписейКладр("Базовый.Классификаторы.Улица",sStreetFileName,eiTypeValue);
+  elsif Sender.name="oBtImpSocrbase":
+   ИмпортЗаписейКладр("Базовый.Классификаторы.Сокращение",sSocrbaseFileName,eiTypeValue);
+  elsif Sender.name="oBtExpKladr":
+   ЭкспортЗаписейКладр("Базовый.Классификаторы.РегионИГород",sKladrFileName,eiTypeValue);
+  elsif Sender.name="oBtExpStreet":
+   ЭкспортЗаписейКладр("Базовый.Классификаторы.Улица",sStreetFileName,eiTypeValue);
+  elsif Sender.name="oBtExpSocrbase":
+   ЭкспортЗаписейКладр("Базовый.Классификаторы.Сокращение",sSocrbaseFileName,eiTypeValue);
+  elsif Sender.name="oBtDelKladr":
+   УдалениеЗаписей(Базовый.Классификаторы.РегионИГород);
+  elsif Sender.name="oBtDelStreet":
+   УдалениеЗаписей(Базовый.Классификаторы.Улица);
+  elsif Sender.name="oBtDelSocrbase":
+   УдалениеЗаписей(Базовый.Классификаторы.Сокращение);
+  elsif Sender.name="oBtSW":
+   РаботасСекундомером;
+   ПоказатьОбъекты;
+  elsif Sender.name="oBtDbf2CSV":
+   КонвертерDBF2TXT;
+  elsif Sender.name="oBtTestUnZip":
+   РаспаковатьФайл;
+  elsif Sender.name="oBtLoadSocrBase":
+   ЗагрузитьСправочник(ftKLADR_SOCRBASE);
+  elsif Sender.name="oBtLoadKladr":
+   ЗагрузитьСправочник(ftKLADR_KLADR);
+  elsif Sender.name="oBtLoadStreet":
+   ЗагрузитьСправочник(ftKLADR_STREET);
+  elsif Sender.name="oBtLoadSocrBaseSP":
+   ЗагрузитьСправочникНаСервереПроцедур(ftKLADR_SOCRBASE);
+  elsif Sender.name="oBtLoadKladrSP":
+   ЗагрузитьСправочникНаСервереПроцедур(ftKLADR_KLADR);
+  elsif Sender.name="oBtLoadStreetSP":
+   ЗагрузитьСправочникНаСервереПроцедур(ftKLADR_STREET);
+  elsif Sender.name="oBtGetVarsion":
+   GetSQLVersionTest;
+  elsif Sender.name="oBtGetSQLServerName":
+   GetSQLServerNameTest;
+  elsif Sender.name="oBtTestMsg":
+   TestMessageBox;
+  elsif Sender.name="oBtTestFormat":
+   TestFormat;
+  elsif Sender.name="oBtTestFormatLog":
+   TestFormatLog;
+  elsif Sender.name="oBtTestSQL":
+   TestADO;
+  fi;
+  end;
+
+  func oTabOnSwitch(Sender :TabSet; NewIndex :Integer) :Logical;
+   --message("oTabOnSwitch iTab="+tostr(iTab));
+   ПоказатьОбъекты;
+   result=true;
+  end;
+
+  proc oTabOnChange(Sender :TabSet);
+   --message("oTabOnChange iTab="+tostr(iTab));
+   ПоказатьОбъекты;
+  end;
+
+  proc BlankOnOpen(Create :Logical);
+    -- Вызывается при открытия окна формы
+    --   Create: True - форма открывается, False - форма восстанавливается при запуске сессии
+   ПоказатьОбъекты;
+  end;
+
+  func CellsOnLookup(Cell :TemplateCell; Value :Variant; var NewValue :Variant) :Logical;
+    -- Обработка события нажатия у клетки кнопки обзора
+    -- Параметры:
+    --   Cell: клетка шаблона
+    --   Value: старое значение в поле. Его тип зависит от типа поля.
+    --   NewValue: новое значение в поле. Его тип зависит от типа поля.
+    var sPrompt, sExt: String;
+    if Cell.Contents="sUnZipFolderName":
+      sPrompt="Укажите папку для распаковки:";
+      if choosefolder(Value,sPrompt)=cmOk:
+       NewValue=RemoveBackSlash(Value);
+      fi;
+    elsif Cell.Contents="sUnZipFileName":
+      sPrompt="Укажите имя распаковываемого файла";
+      sExt="Любой|*.*";
+      if choosefile(Value,sPrompt,sExt)=cmOk:
+       NewValue=extractfilename(Value);
+      fi;
+    else
+      if  Cell.Contents="sDBFFileName":
+       sPrompt="Выберите исходный файл для конвертации";
+       sExt="DBF файл|*.DBF";
+      elsif Cell.Contents="sCSVFileName":
+       sPrompt="Укажите имя файла результата конвертации";
+       sExt="CSV файл|*.CSV";
+      elsif Cell.Contents="sZipFileName":
+       sPrompt="Выберите zip файл";
+       sExt="Zip файл|*.ZIP";
+      else
+       sPrompt=       "Укажите файл для импорта/экспорта классификатора "+
+                      if(Cell.Contents="sKladrFileName","РегионыГорода",
+                      if(Cell.Contents="sStreetFileName","Улицы",
+                      if(Cell.Contents="sSocrbaseFileName","Сокращение","")));
+       sExt=sExtPrompt;
+      fi;
+      if choosefile(Value,sPrompt,sExt)=cmOk:
+       NewValue=Value;
+      fi;
+    fi;
+    template.EndEdit(true);
+    Result = false; -- Продолжаем стандартную обработку
+  end;
+
+--}
+--{ вспомогательные методы
+--proc   ОткрытьБланк(sBlankClassName: String);
+--  var локКлассБл :Class BlankForm;
+--  var локБл      :BlankForm;
+--  локКлассБл=FindClass(sBlankClassName) as Class BlankForm;
+--  Assert(локКлассБл <> nil);
+--  if (локКлассБл.ObjectsCount = 0) then
+--    локКлассБл.ShowForm(Window.ChildWindow);
+--  else
+--    локБл = локКлассБл.Objects[1] as BlankForm;
+--    локБл.Window.GoTop;
+--  fi;
+--end;
+
+proc   ОткрытьФорму synonym ОткрытьБланк, ОткрытьКартотеку (sFormClassName: String);
+  var локКлассБл :Class Form;
+  var локБл      :Form;
+  локКлассБл=FindClass(sFormClassName) as Class Form;
+  Assert(локКлассБл <> nil);
+  --message("Класс "+локКлассБл.classname+" количество "+tostr(локКлассБл.ObjectsCount));
+  if (локКлассБл.ObjectsCount = 0) then
+    локКлассБл.ShowForm(Window.ChildWindow);
+  else
+    локБл = локКлассБл.Objects[1] as Form;
+    локБл.visible=true;
+    локБл.Window.GoTop;
+  fi;
+end;
+proc ПоказатьОбъекты;
+frPage2.visible = (iTab=1);
+frPage3.visible = (iTab=2);
+frPage4.visible = (iTab=3);
+frPage5.visible = (iTab=4);
+frPage6.visible = (iTab=5);
+frPage7.visible = (iTab=6);
+frPage1.visible = (iTab=0);
+template.CurrentFrame=if(iTab=1,frPage2,if(iTab=2,frPage3,if(iTab=3,frPage4,if(iTab=4,frPage5,if(iTab=5,frPage6,if(iTab=6,frPage7,frPage1))))));
+oBtSW.caption="Стaрт секундомера";
+if oStopWatch<>nil then
+ if oStopWatch.InAction then
+  oBtSW.caption="Стоп секундомера";
+ end;
+end;
+end;
+
+
+-- опции экспортера
+--ПоказатьМастер / ShowWizard - открывается мастер экспорта;
+--СоСсылками / WithReferences - экспортировать со ссылками;
+--Упаковка / Packed - экспортировать в сжатом виде.
+--Константы, определенные в данном типе, используются в методе ЭкспортЗаписей
+-- Типы экспорта
+-- tbc" или "tbd" или "xml".
+-- Exporter.FollowLinks :Logical -- (ЭкспортироватьCсылки)
+-- В перечислимый тип Importer.Options добавлено значение:
+--    const ClearInvalidRefs = 4
+--cpWindows - кодировка Windows 1251;
+--cpDOS - DOS-кодировка (cp866);
+--cpUnicode - Юникод;
+--cpUTF8 - кодировка UTF8.
+
+--Замечание. Для проверки того, что свойство является полем
+--достаточно выполнить операцию IS: Members[I] is FieldInfo.
+
+proc   ЭкспортЗаписейКладр(sClassRecordsName: String; sFileName: String; eiTypeValue: eiType);
+var locClassRecords: class record ;
+var oExp: Exporter;
+--var oIso: Isolation;
+var oQue: Query;
+var sExt:string;
+var eiTypeCur:eiType;
+locClassRecords=findClass(sClassRecordsName);
+if locClassRecords<>nil then
+  sExt=delete(up(ExtractFileExt(sFileName)),1,1);
+  if    sExt=sTypeValue[TBD as integer] then
+    eiTypeCur=TBD;
+  elsif sExt=sTypeValue[TBC as integer] then
+    eiTypeCur=TBC;
+  elsif sExt=sTypeValue[XML as integer] then
+    eiTypeCur=XML;
+  elsif sExt=sTypeValue[CDF as integer] then
+    eiTypeCur=CDF;
+  elsif sExt=sTypeValue[CRD as integer] then
+    eiTypeCur=CRD;
+  end;
+  if eiTypeCur<>nil then
+   --Isolation.Create([locClassRecords]);
+   beginisolation([locClassRecords]);
+   try
+     #if build >= 938 then
+      oExp=Exporter.Create(nil,nil,TextFile.Ansi);
+     #else
+      oExp=Exporter.Create;
+     #end
+
+     oQue=Query.Create([locClassRecords]);
+     try
+        --oExp.StartExport(sFileName,seiType(eiTypeCur));
+        oExp.StartExport(sFileName);
+        #if build < 938 then
+         oExp.CodePageType(Exporter.cpWindows);
+        #end
+
+        if    pos("Регион",locClassRecords.classname)<>0 then
+          oExp.SetExportedFields(locClassRecords,["DocId","Имя","Индекс","ИФНС","Участок","ОКАТО","Сокращение",
+                                                  "Код","Уровень","Статус","Регион","Район","Город"]);
+          oQue.LoadingFields="DocId;Имя;Индекс;ИФНС;Участок;ОКАТО;Сокращение;Код;Уровень;Статус;Регион;Район;Город";
+        elsif pos("Улица",locClassRecords.classname)<>0 then
+          oExp.SetExportedFields(locClassRecords,["DocId","Имя","Индекс","ИФНС","Участок","ОКАТО","Сокращение",
+                                                  "Код","Пункт"]);
+          oQue.LoadingFields="DocId;Имя;Индекс;ИФНС;Участок;ОКАТО;Сокращение;Код;Пункт";
+        elsif pos("Сокращение",locClassRecords.classname)<>0 then
+          oExp.SetExportedFields(locClassRecords,["DocId","Код","Имя","Уровень","КодЭлемента"]);
+          oQue.LoadingFields="DocId;Код;Имя;Уровень;КодЭлемента";
+        end;
+        --oExp.SetExportedFields(locClassRecords,ПолучитьПоляЗаписи(locClassRecords));
+        #if build < 938 then
+         oExp.FollowLinks=False;
+         oExp.IgnoreForeignKey=False;
+        #else
+         oExp.Option[Exporter.WithReferences] = false;
+         oExp.Option[Exporter.IgnoreForeignKey] = false;
+        #end
+        oQue.select;
+        ЗапуститьСекундомер;
+        oExp.ExportQuery(oQue);
+        oExp.EndExport;
+        ОстановитьСекундомер;
+        message("Экспорт "+sClassRecordsName+" в файл "+sFileName+" завершен. Длительность "+СчитатьСекундомер(true),mtInformation);
+     finally
+      oExp=nil;
+      oQue=nil;
+     end;
+   finally
+    EndIsolation;
+   end;
+  else
+   message("Расширение файла не соответствует типам импорта/экспорта");
+  fi;
+fi;
+end;
+
+proc   ИмпортЗаписейКладр(sClassRecordsName: String; sFileName: String; eiTypeValue: eiType);
+var locClassRecords: class record ;
+var oImp: Importer;
+var sExt:string;
+var eiTypeCur:eiType;
+locClassRecords=findClass(sClassRecordsName);
+if locClassRecords<>nil then
+  sExt=delete(up(ExtractFileExt(sFileName)),1,1);
+  if    sExt=sTypeValue[TBD as integer] then
+    eiTypeCur=TBD;
+  elsif sExt=sTypeValue[TBC as integer] then
+    eiTypeCur=TBC;
+  elsif sExt=sTypeValue[XML as integer] then
+    eiTypeCur=XML;
+  elsif sExt=sTypeValue[CDF as integer] then
+    eiTypeCur=CDF;
+  elsif sExt=sTypeValue[CRD as integer] then
+    eiTypeCur=CRD;
+  end;
+  if eiTypeCur<>nil then
+    if existfile(sFileName) then
+      if EnqOkCancel("Загрузить записи в "+sClassRecordsName+" из файла "+sFileName+"?")=cmOk then
+        #if build >= 938 then
+         oImp=Importer.Create(nil, sFileName, textfile.ansi, [oImp.AutoImport,oImp.ShowProgress]);
+        #else
+         oImp=Importer.Create;
+        #end
+        try
+          #if build < 938 then
+           oImp.AutoCorr=True;
+          #end
+          oImp.ConflictMode=oImp.Replace;
+          ЗапуститьСекундомер;
+          #if build >= 938 then
+           oImp.ImportRecords;
+          #else
+           oImp.ImportFromFile(sFileName,seiType(eiTypeCur),[oImp.AutoImport,oImp.ShowProgress]);
+          #end
+          ОстановитьСекундомер;
+          message("Импорт в "+sClassRecordsName+" завершен. Длительность "+СчитатьСекундомер(true),mtInformation);
+        finally
+         oImp=nil;
+        end;
+      end;
+    else
+     message("Не найлен файл "+sFileName+"!",mtWarning);
+    end;
+  else
+   message("Расширение файла не соответствует типам импорта/экспорта",mtWarning);
+  fi;
+fi;
+end;
+
+func sEIType(value :eiType) :String;
+  Result = if(value=TBC,"TBC",if(value=TBD,"TBD",if(value=XML,"XML",if(value=CDF,"CDF",if(value=CRD,"CRD","")))));
+end;
+
+func ПолучитьПоляЗаписи(lClassRecors: class record): string[] ;
+vaR imb,imbc,ifds:integer;
+ imbc=lClassRecors.classinfo.MembersCount;
+ for imb = 1..imbc do
+  if lClassRecors.classinfo.member[imb] is FieldInfo then
+   ifds=ifds+1;
+   Result[ifds]=lClassRecors.classinfo.member[imb].name;
+  end;
+ end;
+end;
+
+
+proc УдалитьВсеЗаписи synonym DeleteAllRecords (lClRec: class record);
+  var Q: Query;
+  var irec,irecs:Integer;
+--  var nBeg:numeric;
+--  nBeg=IntervalSec;
+  Q=query.create([lClRec]);
+  try
+    Q.LoadingFieldsMode=СИС2.Константы.mdNone;
+    Q.IncludeDeleted=true;
+    q.LoadingFields="deleted";
+    Q.OpenHint[query.IgnoreRecordFilter]=true;
+    Q.OpenHint[query.LargeResult]=true;
+    Q.OpenHint[query.Packeting]=false;
+    Q.OpenHint[query.AlwaysPacketing]=false;
+    Q.OpenHint[query.Interrupted]=true;
+    Q.Select;
+    irecs = Q.Count;
+    Q.First;
+    while not Q.EOF do
+      irec = irec +1;
+      hint("Удаление записей "+lClRec.classname,irec,irecs);
+      if Q.Current.Deleted = false:
+        try
+          Q.Current.Delete;
+        except
+          Trace('Запись '+Str(Q.Current)+' не удалена.');
+        end;
+      fi;
+      Q.Next;
+    end;
+  finally
+   Q=nil;
+  end;
+end;
+
+proc УдалениеЗаписей(lClRec: class record);
+ if EnqOkCancel("Удалить все записи "+lClRec.Classname+"?")=cmOk then
+  ЗапуститьСекундомер;
+  УдалитьВсеЗаписи(lClRec);
+  oStopWatch.stop;
+  message(oStopWatch.TakeEx);
+ end;
+end;
+
+proc КонвертерDBF2TXT;
+var locDBFFileName:string;
+ ЗапуститьСекундомер;
+ locDBFFileName= ExtractFileName(sDBFFileName);
+ if  up(locDBFFileName)=cKladrFileName then
+  convertKladr2CSV(sDBFFileName,ftKLADR_KLADR);
+ elsif up(locDBFFileName)=cStreetFileName then
+  convertKladr2CSV(sDBFFileName,ftKLADR_STREET);
+ elsif up(locDBFFileName)=cSocrBaseFileName then
+  convertKladr2CSV(sDBFFileName,ftKLADR_SOCRBASE);
+ elsif up(locDBFFileName)=cAltNamesFileName then
+  convertKladr2CSV(sDBFFileName,ftKLADR_ALTNAMES);
+ elsif up(locDBFFileName)=cDomaFileName then
+  convertKladr2CSV(sDBFFileName,ftKLADR_DOMA);
+ elsif up(locDBFFileName)=cFlatFileName then
+  convertKladr2CSV(sDBFFileName,ftKLADR_FLAT);
+ end;
+ ОстановитьСекундомер;
+ message("Конвертирование файл "+sDBFFileName+" в файл "+sCSVFileName+" завершено. Длительность "+СчитатьСекундомер(true),mtInformation);
+end;
+
+const iHeaderLen_Socrbase:Integer=161;  --  длина заголовка socrbase.dbf
+const iHeaderLen_Kladr:Integer=289;     --  длина заголовка kladr.dbf
+const iHeaderLen_Street:Integer=257;    --  длина заголовка street.dbf
+const iRecLen_Socrbase:Integer=48;      --  длина заголовка socrbase.dbf
+const iRecLen_Kladr:Integer=90;         --  длина заголовка kladr.dbf
+const iRecLen_Street:Integer=93;        --  длина заголовка street.dbf
+const iMaxRandom:integer=268435456;     --  1диапазон случайных идентификаторов из 7 шестнадцатеричных разрядов
+const sFmtExtIdH:string="$$$$$$$";       --  шаблон для внешнего идентификатора
+const sFmtExtIdD:string="0000000";       --  шаблон для внешнего идентификатора
+
+--socrbase.dbf      --kladr.dbf       --street.dbf
+--LEVEL C(5)        --NAME  C(40)     --NAME C(40)
+--SCNAME C(10)      --SOCR  C(10)     --SOCR C(10)
+--SOCRNAME C(29)    --CODE  C(13)     --CODE C(17)
+--KOD_T_ST C(3)     --INDEX C(6)      --INDEX C(6)
+                    --GNINMBC(4)      --GNINMB C(4)
+                    --UNO   C(4)      --UNO   C(4)
+                    --OCATD C(11)     --OCATD C(11)
+                    --STATUS C(1)
+
+proc convertKladr2CSV(sFileName:string; ftKladr:ftKLADR);
+var dbf,csv:textfile;
+var sRec,stab:string;
+var id:integer;
+randomize;
+stab=chr(9);
+if existfile(sFileName) then
+  if ftKladr=ftKladr_Socrbase then
+   dbf = textfile.Create(sFileName,fmOpenRead,textfile.OEM);
+   csv = textfile.Create(sCSVFileName,fmCreate,textfile.ANSI);
+   sRec = dbf.read(iHeaderLen_Socrbase);
+   id=0;
+   while not dbf.eof do
+    id=id+1;
+    sRec=dbf.read(iRecLen_Socrbase);
+    if  length(sRec)<iRecLen_Socrbase:
+     break;
+    fi;
+    csv.writeln(tostr(id)+stab+
+                str(random(iMaxRandom),sFmtExtIdH)+str(id,sFmtExtIdD)+stab+
+                substr(sRec,2,5)+stab+
+                substr(sRec,7,10)+stab+
+                substr(sRec,17,29)+stab+
+                substr(sRec,46,3));
+   end;
+  elsif ftKladr=ftKladr_Kladr then
+   dbf = textfile.Create(sFileName,fmOpenRead,textfile.OEM);
+   csv = textfile.Create(sCSVFileName,fmCreate,textfile.ANSI);
+   sRec = dbf.read(iHeaderLen_Kladr);
+   id=0;
+   while not dbf.eof do
+    id=id+1;
+    sRec=dbf.read(iRecLen_Kladr);
+    if  length(sRec)<iRecLen_Kladr:
+     break;
+    fi;
+    csv.writeln(tostr(id)+stab+
+                str(random(iMaxRandom),sFmtExtIdH)+str(id,sFmtExtIdD)+stab+
+                substr(sRec,2,40)+stab+
+                substr(sRec,42,10)+stab+
+                substr(sRec,52,13)+stab+
+                substr(sRec,65,6)+stab+
+                substr(sRec,71,4)+stab+
+                substr(sRec,75,4)+stab+
+                substr(sRec,79,11)+stab+
+                substr(sRec,90,1));
+   end;
+  elsif ftKladr=ftKladr_Street then
+   dbf = textfile.Create(sFileName,fmOpenRead,textfile.OEM);
+   csv = textfile.Create(sCSVFileName,fmCreate,textfile.ANSI);
+   sRec = dbf.read(iHeaderLen_Street);
+   id=0;
+   while not dbf.eof do
+    id=id+1;
+    sRec=dbf.read(iRecLen_Street);
+    if  length(sRec)<iRecLen_Street:
+     break;
+    fi;
+    csv.writeln(tostr(id)+stab+
+                str(random(iMaxRandom),sFmtExtIdH)+str(id,sFmtExtIdD)+stab+
+                substr(sRec,2,40)+stab+
+                substr(sRec,42,10)+stab+
+                substr(sRec,52,17)+stab+
+                substr(sRec,69,6)+stab+
+                substr(sRec,75,4)+stab+
+                substr(sRec,79,4)+stab+
+                substr(sRec,83,11));
+   end;
+  end;
+else
+ message("Не найден файл "+sFileName+"!");
+end;
+end;
+
+proc   РаспаковатьФайл;
+var oUnZip: UserObject;
+  oUnZip = Библио.Unzip.Create;
+  oUnZip.setfield("ZipFileName", sZipFileName);
+  oUnZip.setfield("DestFolder", sUnZipFolderName);
+  oUnZip.setfield("DestFileName", sUnZipFileName);
+  oUnZip.unzip;
+end;
+
+ const sKLADRTitul: String = "Классификатор адресов России (КЛАДР)";
+ const sKladrBCPFolderDyDefault: String = "KLADR.BCP\"; --Папка бэкапов адресных справочников (КЛАДР)
+ const sKladrDownLoadURL: String = "https://www.gnivc.ru/inf_provision/classifiers_reference/kladr/";
+
+ const sBCPFileName_SOCRBASE: string = "socrbase";
+ const sBCPFileName_KLADR: string = "kladr";
+ const sBCPFileName_STREET: string = "street";
+ const sBCPFileName_ALTNAMES: string = "altnames";
+ const sBCPFileName_DOMA: string = "doma";
+ const sBCPFileName_FLAT: string = "flat";
+
+ const sRecClassName_SOCRBASE: string = "Базовый.Классификаторы.Сокращение";
+ const sRecClassName_KLADR: string = "Базовый.Классификаторы.РегионИГород";
+ const sRecClassName_STREET: string = "Базовый.Классификаторы.Улица";
+ const sRecClassName_ALTNAMES: string = "Базовый.Классификаторы.Переименование";
+ const sRecClassName_DOMA: string = "Базовый.Классификаторы.Дома";
+ const sRecClassName_FLAT: string = "Базовый.Классификаторы.Квартиры";
+
+ var CRLF: String = chr(13)+chr(10);
+ var sPrjKladrBCPFolder: String = sessioninfo.InfoBase.ProjectByName[self.ClassProject].folder+"Shared\"+sKladrBCPFolderDyDefault;
+-- var sSrvKladrBCPFolder: String = Sessioninfo.SharedFolder + sKladrBCPFolderDyDefault;
+-- var sSrvKladrBCPFolder: String = GetPathToShared + sKladrBCPFolderDyDefault;
+ --var sSrvKladrBCPFolder: String = GetPathToShared;
+ var sSrvKladrBCPFolder: String = if(SessionInfo.SharedFolder<>"",
+                                  Sessioninfo.SharedFolder + sKladrBCPFolderDyDefault,
+                                  '%Infobases%\'+ BaseInfo.Name + '\Shared\');
+ var sKLADRName:string[]=["kladr","street","socrbase","altnames","doma","flat"];
+ var sKLADRClassName:string[]=[sRecClassName_KLADR,
+                               sRecClassName_STREET,
+                               sRecClassName_SOCRBASE,
+                               sRecClassName_ALTNAMES,
+                               sRecClassName_DOMA,
+                               sRecClassName_FLAT];
+-- func GetAbsolutePathName(sFileName:string):string;
+-- var oFSO:AutoObject;
+-- oFSO=AutoObject.Create("Scripting.FileSystemObject");
+-- Result = oFSO.GetAbsolutePathName(sFileName);
+-- end;
+
+ func testBCPFiles(FT:ftKLADR): logical;
+ var sBCPName, locFileNameZip, locFileNameFmt: String;
+ sBCPName = sKLADRName[FT as integer];
+ locFileNameZip=СИС2.Файл.GetFullFileName(sPrjKladrBCPFolder,sBCPName+".zip");
+ locFileNameFmt=СИС2.Файл.GetFullFileName(sPrjKladrBCPFolder,sBCPName+"_bcp_fmt.xml");
+ if not existfile(locFileNameZip) :
+  --message("Не найден файл '"+GetAbsolutePathName(locFileNameZip)+"'!",mtWarning);
+  message("Не найден файл '"+locFileNameZip+"'!",mtWarning);
+ elsif not existfile(locFileNameFmt) :
+  --message("Не найден файл '"+GetAbsolutePathName(locFileNameFmt)+"'!",mtWarning);
+  message("Не найден файл '"+locFileNameFmt+"'!",mtWarning);
+ else
+  result=true;
+ fi;
+ end;
+
+proc SyncKladrBCPFolder;
+   -- Копирование папки бэкапов таблиц КЛАДРа на клиент
+  --var sPrjKladrBCPFolder, sLocKladrBCPFolder: String;
+  var aFiles: String[];
+  var iter,ifiles: Integer;
+  --sPrjKladrBCPFolder = sessioninfo.InfoBase.ProjectByName[self.ClassProject].folder+sKladrBCPFolderDyDefault;
+  if existfolder(sPrjKladrBCPFolder) then
+    -- синхронизация файлов
+    --sLocKladrBCPFolder = Sessioninfo.localfolder + sKladrBCPFolderDyDefault;
+    if not existfolder(sSrvKladrBCPFolder) :
+     createfolder(sSrvKladrBCPFolder);
+    fi;
+    if existfolder(sSrvKladrBCPFolder) :
+     aFiles=getfilelist(sPrjKladrBCPFolder,"*.*",[FindOnlyFiles]);
+     ifiles=LengthOfArray(aFiles);
+     hint("Ждите... загрузка бэкапов справочника КЛАДР",0,ifiles);
+     for iter = 1..ifiles do
+      hint("Ждите... загрузка бэкапов справочника КЛАДР",iter,ifiles);
+      with сис2.файл do
+       СинхронизироватьФайлы(aFiles[iter],sSrvKladrBCPFolder+ExtractFileName(aFiles[iter]));
+      end;
+     od;
+     hint("Загрузка бэкапов справочника КЛАДР",ifiles,ifiles);
+    fi;
+  fi;
+end;
+
+proc ЗагрузитьСправочник(FT:ftKLADR);
+--TRUNCATE TABLE [КЛАДР_отладка_2018_04].[dbo].[Улица]
+--BULK INSERT [КЛАДР_отладка_2018_04].[dbo].[Улица]
+--FROM 'C:\work\ПЗ\Мусеев\T-SQL_МассовыйИмпорт\street_from_bcp\street.bcp'
+--WITH (
+--DATAFILETYPE = 'char' ,
+--CODEPAGE = 'RAW' ,
+--TABLOCK ,
+--KEEPIDENTITY ,
+--FORMATFILE = 'C:\work\ПЗ\Мусеев\T-SQL_МассовыйИмпорт\street_from_bcp\street_bcp_fmt.xml',
+--ERRORFILE = 'C:\work\ПЗ\Мусеев\T-SQL_МассовыйИмпорт\street_from_bcp\street.err'
+--)
+-- скопировать исходные файлы на клиент
+-- сгенерить t-sql скрипт
+-- выполнить его
+--var   sLocKladrBCPFolder, sPrjKladrBCPFolder: String;
+var locFileNameZip, locFileNameBCP, locFileNameFmt, locFileNameErr : String;
+var sBCPName, locRecClassName: String;
+var oUnZip: Библио.Unzip;
+var sSQL: string;
+var locRecClass: class record;
+trace("SessionInfo.TempFolder="+SessionInfo.TempFolder);
+trace("SessionInfo.SharedFolder="+SessionInfo.SharedFolder);
+trace("SessionInfo.LocalFolder="+SessionInfo.LocalFolder);
+trace("SessionInfo.ConnectFolder="+SessionInfo.ConnectFolder);
+trace("SessionInfo.CommonIBFolder="+SessionInfo.CommonIBFolder);
+trace("SessionInfo.MyDocumentsFolder="+SessionInfo.MyDocumentsFolder);
+trace("Projectinfo.folder="+baseinfo.ProjectByName[self.ClassProject].folder);
+
+--SessionInfo.TempFolder=C:\T94\Temp\ -- локальный
+--SessionInfo.SharedFolder=C:\T94\Data\КЛАДР_Тестирование_20180427\Shared\ -- на серввере
+--SessionInfo.LocalFolder=C:\T94\Users\Мой компьютер\КЛАДР_Тестирование_20180427\ -- локальный
+--SessionInfo.ConnectFolder=C:\T94\Users\ -- локальный
+--SessionInfo.CommonIBFolder=C:\T94\Users\Мой компьютер\КЛАДР_Тестирование_20180427\Common\
+--SessionInfo.MyDocumentsFolder=C:\Documents and Settings\ruslan\My Documents\
+
+if testBCPFiles(FT):
+  SyncKladrBCPFolder;
+  sBCPName= if(FT = ftKLADR_SOCRBASE,sBCPFileName_SOCRBASE,
+            if(FT = ftKLADR_KLADR,sBCPFileName_KLADR,
+            if(FT = ftKLADR_STREET,sBCPFileName_STREET,
+            if(FT = ftKLADR_ALTNAMES,sBCPFileName_ALTNAMES,
+            if(FT = ftKLADR_DOMA,sBCPFileName_DOMA,sBCPFileName_FLAT)))));
+  locFileNameZip=СИС2.Файл.GetFullFileName(sSrvKladrBCPFolder,sBCPName+".zip");
+  locFileNameBcp=СИС2.Файл.GetFullFileName(sSrvKladrBCPFolder,sBCPName+".bcp");
+  locFileNameFmt=СИС2.Файл.GetFullFileName(sSrvKladrBCPFolder,sBCPName+"_bcp_fmt.xml");
+  locFileNameErr=СИС2.Файл.GetFullFileName(sSrvKladrBCPFolder,sBCPName+".err");
+  if existfile(locFileNameZip):
+   if existfile(locFileNameFmt):
+     if existfile(locFileNameBcp):
+      removefile(locFileNameBcp);
+     fi;
+     -- здесь распаковать
+     oUnZip = Библио.Unzip.Create;
+     with oUnZip do
+      setfield("ZipFileName", locFileNameZip);
+      setfield("DestFolder", sSrvKladrBCPFolder);
+      setfield("DestFileName", sBCPName+".bcp");
+      unzip;
+     end;
+     if existfile(locFileNameErr) :
+      removefile(locFileNameErr);
+     fi;
+     -- создать скрипт t-sql
+     --ExecuteSQL(vSQL, Пресс.Справочники.Товар);
+     locRecClassName=if(FT = ftKLADR_SOCRBASE,sRecClassName_SOCRBASE,
+                     if(FT = ftKLADR_KLADR,sRecClassName_KLADR,
+                     if(FT = ftKLADR_STREET,sRecClassName_STREET,
+                     if(FT = ftKLADR_ALTNAMES,sRecClassName_ALTNAMES,
+                     if(FT = ftKLADR_DOMA,sRecClassName_DOMA,sRecClassName_FLAT)))));
+     locRecClass=findClass(locRecClassName);
+     if locRecClass <> nil :
+      sSQL="TRUNCATE TABLE [dbo].["+locRecClass.ClassInfo.DBTableName+"]"+CRLF+
+           "BULK INSERT .[dbo].["+locRecClass.ClassInfo.DBTableName+"]"+CRLF+
+           "FROM '"+locFileNameBcp+"'"+CRLF+
+           "WITH ("+CRLF+
+           "DATAFILETYPE = 'char' ,"+CRLF+
+           "CODEPAGE = 'RAW' ,     "+CRLF+
+           "TABLOCK ,              "+CRLF+
+           "KEEPIDENTITY ,         "+CRLF+
+           "FORMATFILE = '"+locFileNameFmt+"',"+CRLF+
+           "ERRORFILE = '"+locFileNameErr+"')"+CRLF;
+      hint("Ждите... Загрузка данных в классификатор "+locRecClassName);
+      executeSQL(sSQL,locRecClass);
+     fi;
+   fi;
+  fi;
+fi;
+end;
+
+proc ЗагрузитьСправочник_socrbase;
+ЗагрузитьСправочник(ftKLADR_SOCRBASE);
+end;
+proc ЗагрузитьСправочник_kladr;
+ЗагрузитьСправочник(ftKLADR_KLADR);
+end;
+proc ЗагрузитьСправочник_street;
+ЗагрузитьСправочник(ftKLADR_STREET);
+end;
+proc ЗагрузитьСправочник_altnames;
+ЗагрузитьСправочник(ftKLADR_ALTNAMES);
+end;
+proc ЗагрузитьСправочник_doma;
+ЗагрузитьСправочник(ftKLADR_DOMA);
+end;
+proc ЗагрузитьСправочник_flat;
+ЗагрузитьСправочник(ftKLADR_FLAT);
+end;
+
+proc ЗагрузитьСправочникНаСервереПроцедур(FT:ftKLADR);
+var oSP:ProcServer;
+var sProcName:string;
+oSP=ProcServer.create;
+sProcName= "ЗагрузитьСправочник_"+
+           if(FT = ftKLADR_SOCRBASE,sBCPFileName_SOCRBASE,
+           if(FT = ftKLADR_KLADR,sBCPFileName_KLADR,
+           if(FT = ftKLADR_STREET,sBCPFileName_STREET,
+           if(FT = ftKLADR_ALTNAMES,sBCPFileName_ALTNAMES,
+           if(FT = ftKLADR_DOMA,sBCPFileName_DOMA,sBCPFileName_FLAT)))));
+oSP.execute("КЛАДР_ТЕСТ.СерверПроцедур.ImportKLADR",sProcName);
+end;
+
+--if exists (SELECT * FROM [dbo].[sysobjects] WHERE name='##getversion' and xtype='P')
+--drop procedure  [dbo].[##getversion]
+--go
+--create procedure [dbo].[##getversion] @var1 as varchar(max) output as
+----set @var1=convert(varchar(max),@@VERSION);
+----set @var1=@@VERSION;
+--select @var1=@@VERSION;
+proc GetSQLVersionTest;
+var sSQLVersion:string;
+ sSQLVersion=Библио.SQL.GetSQLVersion;
+ message(sSQLVersion);
+ trace(sSQLVersion);
+-- sSQLVersion=Библио.SQL.GetSQLVersion("Базовый.Классификаторы.Сокращение");
+-- message(sSQLVersion);
+-- trace(sSQLVersion);
+-- sSQLVersion=Библио.SQL.GetSQLVersion("Базовый.Классификаторы.Сокращение");
+-- message(sSQLVersion);
+-- trace(sSQLVersion);
+end;
+
+proc GetSQLServerNameTest;
+var sSQLServerName:string;
+ sSQLServerName=Библио.SQL.GetSQLServerName;
+ message(sSQLServerName);
+ trace(sSQLServerName);
+end;
+
+func GetSQLVersion:String;
+var sSQL:string;
+var locRecClass: class record;
+var ares:variant[];
+var vres:variant;
+locRecClass=findclass( sRecClassName_KLADR) as class record;
+if  locRecClass<>nil:
+  try
+    sSQL="if exists (SELECT * FROM [dbo].[sysobjects] WHERE name='test_getversion' and xtype='P')"+crlf+
+         "drop procedure  [dbo].[test_getversion]";
+    executesql(sSQL);
+    sSQL="create procedure [dbo].[test_getversion] @var1 as varchar(1000) output as set @var1=convert(varchar(max),@@VERSION);";
+--sSQL = "CREATE PROCEDURE [dbo].[test_getversion]" + crlf +
+--         "@var1 varchar(256) output" + crlf +
+--         "AS"  + crlf +
+--         "SET @var1 = convert(varchar(max),@@VERSION);";
+----         "SELECT @var1 = @@VERSION;";
+
+
+    executesql(sSQL,locRecClass);
+    ares=[nil];
+    #NoWarning 3;
+    vres=executesql("test_getversion",locRecClass,["@var1"],ares,true);
+    result=ares[1];
+    sSQL="if exists (SELECT * FROM [dbo].[sysobjects] WHERE name='##getversion' and xtype='P')"+crlf+
+         "drop procedure  [dbo].[test_getversion]";
+    executesql(sSQL);
+    message(result);
+    trace(result);
+  except
+  end;
+fi;
+end;
+
+proc TestMessageBox;
+message("TestMessageBox без иконки");
+message("TestMessageBox",тсПредупреждение);
+message("TestMessageBox",тсОшибка);
+message("TestMessageBox",тсИнформация);
+message("TestMessageBox",тсПодтверждение);
+message("TestMessageBox",тсПроизвольное);
+message("TestMessageBox",тсСистема);
+message("TestMessageBox",mtWarning);
+message("TestMessageBox",mtError);
+message("TestMessageBox",mtInformation);
+message("TestMessageBox",mtConfirmation);
+message("TestMessageBox",mtCustom);
+message("TestMessageBox",mtWinLogo);
+message(version(true),mtWinLogo);
+message(version,mtWinLogo);
+enquiry("ProcessInfo",version(true),["OK"],mtWarning);
+enquiry("ProcessInfo",version,["OK"],mtError);
+enquiry("","!!!",["OK"],mtInformation);
+enquiry("","!!!",["OK"],mtWarning);
+enquiry("","!!!",["OK"],mtError);
+end;
+
+proc   РаботасСекундомером;
+ with Библио.StopWatch do
+   if oStopWatch=nil then
+    --oStopWatch=Библио.StopWatch.Create;
+    oStopWatch=Create;
+   elsif oStopWatch.InAction:
+    oStopWatch.stop;
+    message(oStopWatch.Take);
+    message(oStopWatch.TakeEx);
+   else
+    oStopWatch.start;
+   end;
+ end;
+end;
+
+proc ЗапуститьСекундомер;
+   if oStopWatch=nil then
+    oStopWatch=Библио.StopWatch.Create;
+   else
+    oStopWatch.start;
+   end;
+end;
+
+proc ОстановитьСекундомер;
+   if oStopWatch<>nil then
+    oStopWatch.stop;
+   end;
+end;
+
+func СчитатьСекундомер(lEx:logical=false):string;
+ if oStopWatch<>nil then
+  if not oStopWatch.InAction then
+   result = if(lEx,oStopWatch.takeEx,oStopWatch.take);
+  end;
+  oStopWatch.stop;
+ end;
+  
+end;
+
+--}
+
+spos1 :string;
+spos2 :string;
+vpos3 :variant;
+iposres: integer = pos(spos1, spos2, vpos3);
+icharposres: integer = CharPOs(spos1, spos2, vpos3);
+
+stored var sValue:string;
+stored var lValue:logical;
+stored var iValue:integer;
+stored var nValue: numeric;
+
+func Fieldvpos3OnClick(Cell :TemplateCell; Action :Template.ClickTypes) :Logical;
+  -- Обработка события нажатия в зависимости от типа
+  -- Параметры:
+  --   Cell: клетка шаблона
+  --   Action: тип нажатия (SingleClick, DoubleClick, EnterPressed, ButtonPressed)
+  -- pos(s1,s2,i) - возвращает позицию подстраки
+  --                игнорирует регистр
+  --                возвращает позицию с начала строки
+  --                ищет с позиции, указанной третьим параметром
+  --                если третий параметр не задан, ищет с 1 позиции
+  --                при отрицательном значении ищет с позиции Length(s2)+1+i
+  --                просматривая вхождения справа налево
+  -- charpos(s1,s2,i) - поиск вхождения любого символа из s1 в s2 регистрозависимый
+  --                параметр i работает так же, как и в pos
+  --                третий параметр не может быть логическим
+
+   var imenu:integer;
+
+  iMenu=alternate("ВЫберите тип параметра",["Строка","Целое","Число","Логическое","nil"]);
+  if    iMenu=1:
+   input(sValue,"Введите строку");
+   setfield(Cell.Contents,sValue);
+  elsif iMenu=2:
+   input(iValue,"Введите целое");
+   setfield(Cell.Contents,iValue);
+  elsif iMenu=3:
+   input(nValue,"Введите число");
+   setfield(Cell.Contents,nValue);
+  elsif iMenu=4:
+   input(lValue,"Введите логическое");
+   setfield(Cell.Contents,lValue);
+  elsif iMenu=5:
+   vpos3 = nil;
+  fi;
+  Result = True; -- Разрешаем стандартную обработку
+end;
+
+inclass
+
+stored var sformat: string;
+       var sFormatRes: string;
+stored var vpar1:variant;
+stored var vpar2:variant;
+stored var vpar3:variant;
+stored var vpar4:variant;
+stored var vpar5:variant;
+stored var vpar6:variant;
+stored var vpar7:variant;
+stored var vpar8:variant;
+stored var vpar9:variant;
+stored var vpar10:variant;
+
+stored var sTestFormatLog:string;
+
+inobject
+
+proc  TestFormat;
+sFormatRes = format6(sFormat,
+vpar1, vpar2, vpar3, vpar4, vpar5, vpar6, vpar7, vpar8, vpar9, vpar10);
+end;
+
+aResFmtTest:string[];
+iResFmtTest:integer;
+const sTestFormatLogByDef:string = "t9_test_format.log";
+
+func FieldsTestFormatLogOnLookup(Cell :TemplateCell; Value :Variant;
+  var NewValue :Variant) :Logical;
+  -- Обработка события нажатия у клетки кнопки обзора
+  -- Параметры:
+  --   Cell: клетка шаблона
+  --   Value: старое значение в поле. Его тип зависит от типа поля.
+  --   NewValue: новое значение в поле. Его тип зависит от типа поля.
+  if value="" :
+   value=sTestFormatLogByDef;
+  fi;
+  NewValue = Value;
+  if cmOk=choosefile(Value,"Выберите файл для записи протокола тестирования","Протокол(*.log)|*.log;*.txt"):
+   NewValue = Value;
+  fi;
+  Result = False; -- Продолжаем стандартную обработку
+end;
+
+proc test_format6;
+var iter:integer;
+var oFile:TextFile;
+aResFmtTest=nil;
+iResFmtTest=0;
+aResFmtTest[1]=format6("%d test_%s_test",1,"test1");
+aResFmtTest[2]=format6("%d test_%-s_test",2,"test2");
+aResFmtTest[3]=format6("%d test_%-20s_test",3,"test3");
+aResFmtTest[4]=format6("%d test_%-20.3s_test",4,"test4");
+aResFmtTest[5]=format6("%d test_%20.3s_test",5,"test5");
+aResFmtTest[6]=format6("%d test_%1:20.7s_%1:20.7s_%1:20.7s_test",6,"test6");
+aResFmtTest[7]=format6("%d test_%.1s_test",7,"test7");
+--aResFmtTest[8]=format6("%d test_%7:*.*s_%7:*.*s_%7:*.*s_test",8,10,3,20,4,30,7,"test8");
+aResFmtTest[8]=format6("%d test_%*.*s_test",8,10,3,"test8");
+aResFmtTest[9]=format6("%d test_%*.*s_%*.*s_%*.*s_test",9,10,3,"test91",20,4,"test92",30,7,"test93");
+aResFmtTest[10]=format6("%d test_%s_%d_%2:x_test",10,"Test",999);
+aResFmtTest[11]=format6("%d test_%s_%.5d_%2:.5x_test",11,"Test",999);
+aResFmtTest[12]=format6("%d test_%s_%10.5d_%2:10.5x_test",12,"Test",999);
+aResFmtTest[13]=format6("%d test_%s_%-10.5d_%2:-10.5x_test",13,"Test",999);
+aResFmtTest[14]=format6("%d test_%*.*s_%4:-10.5d_%4:-10.5x_test",14,9,1,"Test",999999);
+aResFmtTest[15]=format6("%d test_%.*s_%3:10.5d_%4:10.5x_test",15,1,"Test",9,999999);
+aResFmtTest[16]=format6("%d test_%8.5e_test",16,123456789.123456);
+aResFmtTest[17]=format6("%d test_%8.5f_test",17,123456789.123456);
+aResFmtTest[18]=format6("%d test_%8.5n_test",18,123456789.123456);
+aResFmtTest[19]=format6("%d test_%8.5g_test",19,123456789.123456);
+aResFmtTest[20]=format6("%d test_%8.5m_test",20,123456789.123456);
+aResFmtTest[21]=format6("%d test_%1:32.18f_%1:32.20g_%1:32.20e",21,123.45678901234567899123456789);
+aResFmtTest[22]=format6("%d test_%1:f_ %1:n_    %1:g_%1:e"        ,22,12345678.901234567899123456789);
+aResFmtTest[23]=format6("%d test_%1:.f_%1:.n_   %1:.g_%1:.e"      ,23,12345678.901234567899123456789);
+aResFmtTest[24]=format6("%d test_%1:.0f_%1:.0n_  %1:.0g_%1:.0e"   ,24,12345678.901234567899123456789);
+aResFmtTest[25]=format6("%d test_%1:.1f_%1:.1n_  %1:.1g_%1:.1e"   ,25,12345678.901234567899123456789);
+aResFmtTest[26]=format6("%d test_%1:.2f_%1:.2n_  %1:.2g_%1:.2e"   ,26,12345678.901234567899123456789);
+aResFmtTest[27]=format6("%d test_%1:.3f_%1:.3n_  %1:.3g_%1:.3e"   ,27,12345678.901234567899123456789);
+aResFmtTest[28]=format6("%d test_%1:.4f_%1:.4n_  %1:.4g_%1:.4e"   ,28,12345678.901234567899123456789);
+aResFmtTest[29]=format6("%d test_%1:.14f_%1:.14n_ %1:.14g_%1:.14e",29,12345678.901234567899123456789);
+aResFmtTest[30]=format6("%d test_%1:.15f_%1:.15n_ %1:.15g_%1:.15e",30,12345678.901234567899123456789);
+aResFmtTest[31]=format6("%d test_%1:.16f_%1:.16n_ %1:.16g_%1:.16e",31,12345678.901234567899123456789);
+aResFmtTest[32]=format6("%d test_%1:.17f_%1:.17n_ %1:.17g_%1:.17e",32,12345678.901234567899123456789);
+aResFmtTest[33]=format6("%d test_%1:.18f_%1:.18n_ %1:.18g_%1:.18e",33,12345678.901234567899123456789);
+aResFmtTest[34]=format6("%d test_%1:.19f_%1:.19n_ %1:.19g_%1:.19e",34,12345678.901234567899123456789);
+aResFmtTest[35]=format6("%d test_%1:.20f_%1:.20n_ %1:.20g_%1:.20e",35,12345678.901234567899123456789);
+aResFmtTest[36]=format6("%d test_%1:f_ %1:n_    %1:g_%1:e"        ,36,123.45678901234567899123456789);
+aResFmtTest[37]=format6("%d test_%1:.f_%1:.n_   %1:.g_%1:.e"      ,37,123.45678901234567899123456789);
+aResFmtTest[38]=format6("%d test_%1:.0f_%1:.0n_  %1:.0g_%1:.0e"   ,38,123.45678901234567899123456789);
+aResFmtTest[39]=format6("%d test_%1:.1f_%1:.1n_  %1:.1g_%1:.1e"   ,39,123.45678901234567899123456789);
+aResFmtTest[40]=format6("%d test_%1:.2f_%1:.2n_  %1:.2g_%1:.2e"   ,40,123.45678901234567899123456789);
+aResFmtTest[41]=format6("%d test_%1:.3f_%1:.3n_  %1:.3g_%1:.3e"   ,41,123.45678901234567899123456789);
+aResFmtTest[42]=format6("%d test_%1:.4f_%1:.4n_  %1:.4g_%1:.4e"   ,42,123.45678901234567899123456789);
+aResFmtTest[43]=format6("%d test_%1:.14f_%1:.14n_ %1:.14g_%1:.14e",43,123.45678901234567899123456789);
+aResFmtTest[44]=format6("%d test_%1:.15f_%1:.15n_ %1:.15g_%1:.15e",44,123.45678901234567899123456789);
+aResFmtTest[45]=format6("%d test_%1:.16f_%1:.16n_ %1:.16g_%1:.16e",45,123.45678901234567899123456789);
+aResFmtTest[46]=format6("%d test_%1:.17f_%1:.17n_ %1:.17g_%1:.17e",46,123.45678901234567899123456789);
+aResFmtTest[47]=format6("%d test_%1:.18f_%1:.18n_ %1:.18g_%1:.18e",47,123.45678901234567899123456789);
+aResFmtTest[48]=format6("%d test_%1:.19f_%1:.19n_ %1:.19g_%1:.19e",48,123.45678901234567899123456789);
+aResFmtTest[49]=format6("%d test_%1:.20f_%1:.20n_ %1:.20g_%1:.20e",49,123.45678901234567899123456789);
+aResFmtTest[50]=format6("%d test_%1:f_%1:n_    %1:g_%1:e"         ,50,0.0);
+aResFmtTest[51]=format6("%d test_%1:.f_%1:.n_   %1:.g_%1:.e"      ,51,0.0);
+aResFmtTest[52]=format6("%d test_%1:.0f_%1:.0n_  %1:.0g_%1:.0e"   ,52,0.0);
+aResFmtTest[53]=format6("%d test_%1:.1f_%1:.1n_  %1:.1g_%1:.1e"   ,53,0.0);
+aResFmtTest[54]=format6("%d test_%1:.2f_%1:.2n_  %1:.2g_%1:.2e"   ,54,0.0);
+aResFmtTest[55]=format6("%d test_%1:.3f_%1:.3n_  %1:.3g_%1:.3e"   ,55,0.0);
+aResFmtTest[56]=format6("%d test_%1:.4f_%1:.4n_  %1:.4g_%1:.4e"   ,56,0.0);
+aResFmtTest[57]=format6("%d test_%1:.14f_%1:.14n_ %1:.14g_%1:.14e",57,0.0);
+aResFmtTest[58]=format6("%d test_%1:.15f_%1:.15n_ %1:.15g_%1:.15e",58,0.0);
+aResFmtTest[59]=format6("%d test_%1:.16f_%1:.16n_ %1:.16g_%1:.16e",59,0.0);
+aResFmtTest[60]=format6("%d test_%1:.17f_%1:.17n_ %1:.17g_%1:.17e",60,0.0);
+aResFmtTest[61]=format6("%d test_%1:.18f_%1:.18n_ %1:.18g_%1:.18e",61,0.0);
+aResFmtTest[62]=format6("%d test_%1:.19f_%1:.19n_ %1:.19g_%1:.19e",62,0.0);
+aResFmtTest[63]=format6("%d test_%1:.20f_%1:.20n_ %1:.20g_%1:.20e",63,0.0);
+aResFmtTest[64]=format6("%d test_%1:f_%1:n_   %1:g_%1:e"          ,64,0.0000001234567890123456789012345);
+aResFmtTest[65]=format6("%d test_%1:.f_%1:.n_  %1:.g_%1:.e"       ,65,0.0000001234567890123456789012345);
+aResFmtTest[66]=format6("%d test_%1:.0f_%1:.0n_ %1:.0g_%1:.0e"    ,66,0.0000001234567890123456789012345);
+aResFmtTest[67]=format6("%d test_%1:.1f_%1:.1n_ %1:.1g_%1:.1e"    ,67,0.0000001234567890123456789012345);
+aResFmtTest[68]=format6("%d test_%1:.2f_%1:.2n_ %1:.2g_%1:.2e"    ,68,0.0000001234567890123456789012345);
+aResFmtTest[69]=format6("%d test_%1:.3f_%1:.3n_ %1:.3g_%1:.3e"    ,69,0.0000001234567890123456789012345);
+aResFmtTest[70]=format6("%d test_%1:.4f_%1:.4n_ %1:.4g_%1:.4e"    ,70,0.0000001234567890123456789012345);
+aResFmtTest[71]=format6("%d test_%1:.12f_%1:.12n_%1:.12g_%1:.12e" ,71,0.0000001234567890123456789012345);
+aResFmtTest[72]=format6("%d test_%1:.13f_%1:.13n_%1:.13g_%1:.13e" ,72,0.0000001234567890123456789012345);
+aResFmtTest[73]=format6("%d test_%1:.14f_%1:.14n_%1:.14g_%1:.14e" ,73,0.0000001234567890123456789012345);
+aResFmtTest[74]=format6("%d test_%1:.15f_%1:.15n_%1:.15g_%1:.15e" ,74,0.0000001234567890123456789012345);
+aResFmtTest[75]=format6("%d test_%1:.16f_%1:.16n_%1:.16g_%1:.16e" ,75,0.0000001234567890123456789012345);
+aResFmtTest[76]=format6("%d test_%1:.17f_%1:.17n_%1:.17g_%1:.17e" ,76,0.0000001234567890123456789012345);
+aResFmtTest[77]=format6("%d test_%1:.18f_%1:.18n_%1:.18g_%1:.18e" ,77,0.0000001234567890123456789012345);
+aResFmtTest[78]=format6("%d test_%1:.19f_%1:.19n_%1:.19g_%1:.19e" ,78,0.0000001234567890123456789012345);
+aResFmtTest[79]=format6("%d test_%1:.20f_%1:.20n_%1:.20g_%1:.20e" ,79,0.0000001234567890123456789012345);
+
+oFile=TextFile.create(sTestFormatLog,fmCreate);
+
+try
+ for iter=1..79 do
+  oFile.writeln("["+aResFmtTest[iter]+"]");
+ od;
+ oFile.Flush;
+finally
+ oFile=nil;
+end;
+end;
+
+proc test_format9;
+var iter:integer;
+var oFile:TextFile;
+var aPar:variant[];
+aResFmtTest=nil;
+iResFmtTest=0;
+aResFmtTest[1]=format("%d test_%s_test",[1,"test1"]);
+aResFmtTest[2]=format("%d test_%-s_test",[2,"test2"]);
+aResFmtTest[3]=format("%d test_%-20s_test",[3,"test3"]);
+aResFmtTest[4]=format("%d test_%-20.3s_test",[4,"test4"]);
+aResFmtTest[5]=format("%d test_%20.3s_test",[5,"test5"]);
+aResFmtTest[6]=format("%d test_%1:20.7s_%1:20.7s_%1:20.7s_test",[6,"test6"]);
+aResFmtTest[7]=format("%d test_%.1s_test",[7,"test7"]);
+--aResFmtTest[8]=format("%d test_%7:*.*s_%7:*.*s_%7:*.*s_test",[8,10,3,20,4,30,7,"test8"]);
+aResFmtTest[8]=format("%d test_%*.*s_test",[8,10,3,"test8"]);
+aResFmtTest[9]=format("%d test_%*.*s_%*.*s_%*.*s_test",[9,10,3,"test91",20,4,"test92",30,7,"test93"]);
+aResFmtTest[10]=format("%d test_%s_%d_%2:x_test",[10,"Test",999]);
+aResFmtTest[11]=format("%d test_%s_%.5d_%2:.5x_test",[11,"Test",999]);
+aResFmtTest[12]=format("%d test_%s_%10.5d_%2:10.5x_test",[12,"Test",999]);
+aResFmtTest[13]=format("%d test_%s_%-10.5d_%2:-10.5x_test",[13,"Test",999]);
+aResFmtTest[14]=format("%d test_%*.*s_%4:-10.5d_%4:-10.5x_test",[14,9,1,"Test",999999]);
+aResFmtTest[15]=format("%d test_%.*s_%3:10.5d_%4:10.5x_test",[15,1,"Test",9,999999]);
+aPar=nil; aPar[1]=16; aPar[2]=123456789.123456;
+aResFmtTest[16]=format("%d test_%8.5e_test",aPar);
+aPar[1]=17; aResFmtTest[17]=format("%d test_%8.5f_test",aPar);
+aPar[1]=18; aResFmtTest[18]=format("%d test_%8.5n_test",aPar);
+aPar[1]=19; aResFmtTest[19]=format("%d test_%8.5g_test",aPar);
+aPar[1]=20; aResFmtTest[20]=format("%d test_%8.5m_test",aPar);
+
+aPar[2]=123.45678901234567899123456789;
+aPar[1]=21; aResFmtTest[21]=format("%d test_%1:32.18f_%1:32.20g_%1:32.20e",aPar);
+
+aPar[2]=12345678.901234567899123456789;
+aPar[1]=22; aResFmtTest[22]=format("%d test_%1:f_ %1:n_    %1:g_%1:e"        ,aPar);
+aPar[1]=23; aResFmtTest[23]=format("%d test_%1:.f_%1:.n_   %1:.g_%1:.e"      ,aPar);
+aPar[1]=24; aResFmtTest[24]=format("%d test_%1:.0f_%1:.0n_  %1:.0g_%1:.0e"   ,aPar);
+aPar[1]=25; aResFmtTest[25]=format("%d test_%1:.1f_%1:.1n_  %1:.1g_%1:.1e"   ,aPar);
+aPar[1]=26; aResFmtTest[26]=format("%d test_%1:.2f_%1:.2n_  %1:.2g_%1:.2e"   ,aPar);
+aPar[1]=27; aResFmtTest[27]=format("%d test_%1:.3f_%1:.3n_  %1:.3g_%1:.3e"   ,aPar);
+aPar[1]=28; aResFmtTest[28]=format("%d test_%1:.4f_%1:.4n_  %1:.4g_%1:.4e"   ,aPar);
+aPar[1]=29; aResFmtTest[29]=format("%d test_%1:.14f_%1:.14n_ %1:.14g_%1:.14e",aPar);
+aPar[1]=30; aResFmtTest[30]=format("%d test_%1:.15f_%1:.15n_ %1:.15g_%1:.15e",aPar);
+aPar[1]=31; aResFmtTest[31]=format("%d test_%1:.16f_%1:.16n_ %1:.16g_%1:.16e",aPar);
+aPar[1]=32; aResFmtTest[32]=format("%d test_%1:.17f_%1:.17n_ %1:.17g_%1:.17e",aPar);
+aPar[1]=33; aResFmtTest[33]=format("%d test_%1:.18f_%1:.18n_ %1:.18g_%1:.18e",aPar);
+aPar[1]=34; aResFmtTest[34]=format("%d test_%1:.19f_%1:.19n_ %1:.19g_%1:.19e",aPar);
+aPar[1]=35; aResFmtTest[35]=format("%d test_%1:.20f_%1:.20n_ %1:.20g_%1:.20e",aPar);
+
+aPar[2]=123.45678901234567899123456789;
+aPar[1]=36; aResFmtTest[36]=format("%d test_%1:f_ %1:n_    %1:g_%1:e"        ,aPar);
+aPar[1]=37; aResFmtTest[37]=format("%d test_%1:.f_%1:.n_   %1:.g_%1:.e"      ,aPar);
+aPar[1]=38; aResFmtTest[38]=format("%d test_%1:.0f_%1:.0n_  %1:.0g_%1:.0e"   ,aPar);
+aPar[1]=39; aResFmtTest[39]=format("%d test_%1:.1f_%1:.1n_  %1:.1g_%1:.1e"   ,aPar);
+aPar[1]=40; aResFmtTest[40]=format("%d test_%1:.2f_%1:.2n_  %1:.2g_%1:.2e"   ,aPar);
+aPar[1]=41; aResFmtTest[41]=format("%d test_%1:.3f_%1:.3n_  %1:.3g_%1:.3e"   ,aPar);
+aPar[1]=42; aResFmtTest[42]=format("%d test_%1:.4f_%1:.4n_  %1:.4g_%1:.4e"   ,aPar);
+aPar[1]=43; aResFmtTest[43]=format("%d test_%1:.14f_%1:.14n_ %1:.14g_%1:.14e",aPar);
+aPar[1]=44; aResFmtTest[44]=format("%d test_%1:.15f_%1:.15n_ %1:.15g_%1:.15e",aPar);
+aPar[1]=45; aResFmtTest[45]=format("%d test_%1:.16f_%1:.16n_ %1:.16g_%1:.16e",aPar);
+aPar[1]=46; aResFmtTest[46]=format("%d test_%1:.17f_%1:.17n_ %1:.17g_%1:.17e",aPar);
+aPar[1]=47; aResFmtTest[47]=format("%d test_%1:.18f_%1:.18n_ %1:.18g_%1:.18e",aPar);
+aPar[1]=48; aResFmtTest[48]=format("%d test_%1:.19f_%1:.19n_ %1:.19g_%1:.19e",aPar);
+aPar[1]=49; aResFmtTest[49]=format("%d test_%1:.20f_%1:.20n_ %1:.20g_%1:.20e",aPar);
+
+apar[2]=0.0;
+aPar[1]=50; aResFmtTest[50]=format("%d test_%1:f_%1:n_    %1:g_%1:e"         ,aPar);
+aPar[1]=51; aResFmtTest[51]=format("%d test_%1:.f_%1:.n_   %1:.g_%1:.e"      ,aPar);
+aPar[1]=52; aResFmtTest[52]=format("%d test_%1:.0f_%1:.0n_  %1:.0g_%1:.0e"   ,aPar);
+aPar[1]=53; aResFmtTest[53]=format("%d test_%1:.1f_%1:.1n_  %1:.1g_%1:.1e"   ,aPar);
+aPar[1]=54; aResFmtTest[54]=format("%d test_%1:.2f_%1:.2n_  %1:.2g_%1:.2e"   ,aPar);
+aPar[1]=55; aResFmtTest[55]=format("%d test_%1:.3f_%1:.3n_  %1:.3g_%1:.3e"   ,aPar);
+aPar[1]=56; aResFmtTest[56]=format("%d test_%1:.4f_%1:.4n_  %1:.4g_%1:.4e"   ,aPar);
+aPar[1]=57; aResFmtTest[57]=format("%d test_%1:.14f_%1:.14n_ %1:.14g_%1:.14e",aPar);
+aPar[1]=58; aResFmtTest[58]=format("%d test_%1:.15f_%1:.15n_ %1:.15g_%1:.15e",aPar);
+aPar[1]=59; aResFmtTest[59]=format("%d test_%1:.16f_%1:.16n_ %1:.16g_%1:.16e",aPar);
+aPar[1]=60; aResFmtTest[60]=format("%d test_%1:.17f_%1:.17n_ %1:.17g_%1:.17e",aPar);
+aPar[1]=61; aResFmtTest[61]=format("%d test_%1:.18f_%1:.18n_ %1:.18g_%1:.18e",aPar);
+aPar[1]=62; aResFmtTest[62]=format("%d test_%1:.19f_%1:.19n_ %1:.19g_%1:.19e",aPar);
+aPar[1]=63; aResFmtTest[63]=format("%d test_%1:.20f_%1:.20n_ %1:.20g_%1:.20e",aPar);
+
+apar[2]=0.0000001234567890123456789012345;
+aPar[1]=64; aResFmtTest[64]=format("%d test_%1:f_%1:n_   %1:g_%1:e"          ,aPar);
+aPar[1]=65; aResFmtTest[65]=format("%d test_%1:.f_%1:.n_  %1:.g_%1:.e"       ,aPar);
+aPar[1]=66; aResFmtTest[66]=format("%d test_%1:.0f_%1:.0n_ %1:.0g_%1:.0e"    ,aPar);
+aPar[1]=67; aResFmtTest[67]=format("%d test_%1:.1f_%1:.1n_ %1:.1g_%1:.1e"    ,aPar);
+aPar[1]=68; aResFmtTest[68]=format("%d test_%1:.2f_%1:.2n_ %1:.2g_%1:.2e"    ,aPar);
+aPar[1]=69; aResFmtTest[69]=format("%d test_%1:.3f_%1:.3n_ %1:.3g_%1:.3e"    ,aPar);
+aPar[1]=70; aResFmtTest[70]=format("%d test_%1:.4f_%1:.4n_ %1:.4g_%1:.4e"    ,aPar);
+aPar[1]=71; aResFmtTest[71]=format("%d test_%1:.12f_%1:.12n_%1:.12g_%1:.12e" ,aPar);
+aPar[1]=72; aResFmtTest[72]=format("%d test_%1:.13f_%1:.13n_%1:.13g_%1:.13e" ,aPar);
+aPar[1]=73; aResFmtTest[73]=format("%d test_%1:.14f_%1:.14n_%1:.14g_%1:.14e" ,aPar);
+aPar[1]=74; aResFmtTest[74]=format("%d test_%1:.15f_%1:.15n_%1:.15g_%1:.15e" ,aPar);
+aPar[1]=75; aResFmtTest[75]=format("%d test_%1:.16f_%1:.16n_%1:.16g_%1:.16e" ,aPar);
+aPar[1]=76; aResFmtTest[76]=format("%d test_%1:.17f_%1:.17n_%1:.17g_%1:.17e" ,aPar);
+aPar[1]=77; aResFmtTest[77]=format("%d test_%1:.18f_%1:.18n_%1:.18g_%1:.18e" ,aPar);
+aPar[1]=78; aResFmtTest[78]=format("%d test_%1:.19f_%1:.19n_%1:.19g_%1:.19e" ,aPar);
+aPar[1]=79; aResFmtTest[79]=format("%d test_%1:.20f_%1:.20n_%1:.20g_%1:.20e" ,aPar);
+
+oFile=TextFile.create(sTestFormatLog,fmCreate);
+try
+ for iter=1..79 do
+  oFile.writeln("["+aResFmtTest[iter]+"]");
+ od;
+ oFile.Flush;
+finally
+ oFile=nil;
+end;
+end;
+
+proc TestFormatLog;
+var sLogName:string;
+ test_format6;
+ if existfile(sTestFormatLog):
+  openeditor(sTestFormatLog);
+ fi;
+ sLogName=sTestFormatLog;
+ sTestFormatLog=sTestFormatLog+"9";
+ test_format9;
+ if existfile(sTestFormatLog):
+  openeditor(sTestFormatLog);
+ fi;
+ sTestFormatLog=sLogName;
+end;
+
+proc  TestADO;
+var sSQL,sCardName:string;
+var locRClass: class  record;
+locRClass=FindClass(sRecClassName_SOCRBASE);
+if  locRClass<>nil:
+ sCardName=Библио.SQL.GetRealCardFileName(locRClass);
+ sCardName=Библио.SQL.GetRealCardFileName(sRecClassName_SOCRBASE);
+ sSQL="Select count(*) as recnoms from "+sCardName;
+ Библио.SQL.openWorkAreaSQL("",sSQL,"sRecClassName_SOCRBASE");
+fi;
+end;
+
+end

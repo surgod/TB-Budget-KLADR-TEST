@@ -1,0 +1,14 @@
+class "Константы проекта";
+Import СИС2 Classes Функции;
+
+inclass
+
+  ИмяВерсииПроекта: String = Self.ClassProject + '.ВерсияПроекта';
+
+  func ПолучитьВерсиюПроекта: Numeric;
+    Result = СформироватьВерсиюПроекта(Self.ClassProject);
+  end;
+
+inobject
+
+end

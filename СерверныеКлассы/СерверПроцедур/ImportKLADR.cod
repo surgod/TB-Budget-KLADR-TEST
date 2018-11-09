@@ -1,0 +1,211 @@
+class "Импортирование КЛАДР средствами СУБД";
+import СИС2 classes файл, WinApi;
+--import classes Библио.ТБ69;
+
+inclass
+
+ type ftKLADR = (ftKLADR_KLADR=1, ftKLADR_STREET, ftKLADR_SOCRBASE, ftKLADR_ALTNAMES,
+                 ftKLADR_DOMA, ftKLADR_FLAT);
+
+ const sKLADRTitul: String = "Классификатор адресов России (КЛАДР)";
+ const sKladrBCPFolderDyDefault: String = "KLADR.BCP\"; --Папка бэкапов адресных справочников (КЛАДР)
+ const sKladrDownLoadURL: String = "https://www.gnivc.ru/inf_provision/classifiers_reference/kladr/";
+
+ const sBCPFileName_SOCRBASE: string = "socrbase";
+ const sBCPFileName_KLADR: string = "kladr";
+ const sBCPFileName_STREET: string = "street";
+ const sBCPFileName_ALTNAMES: string = "altnames";
+ const sBCPFileName_DOMA: string = "doma";
+ const sBCPFileName_FLAT: string = "flat";
+
+ const sRecClassName_SOCRBASE: string = "Базовый.Классификаторы.Сокращение";
+ const sRecClassName_KLADR: string = "Базовый.Классификаторы.РегионИГород";
+ const sRecClassName_STREET: string = "Базовый.Классификаторы.Улица";
+ const sRecClassName_ALTNAMES: string = "Базовый.Классификаторы.Переименование";
+ const sRecClassName_DOMA: string = "Базовый.Классификаторы.Дома";
+ const sRecClassName_FLAT: string = "Базовый.Классификаторы.Квартиры";
+
+--inobject
+
+ var CRLF: String = chr(13)+chr(10);
+ var sPrjKladrBCPFolder: String = sessioninfo.InfoBase.ProjectByName[self.ClassProject].folder+"Shared\"+sKladrBCPFolderDyDefault;
+ --var sSrvKladrBCPFolder: String = Sessioninfo.SharedFolder + sKladrBCPFolderDyDefault;
+ var sSrvKladrBCPFolder: String = Sessioninfo.TempFolder + sKladrBCPFolderDyDefault;
+ var sKLADRName:string[]=["kladr","street","socrbase","altnames","doma","flat"];
+ var sKLADRClassName:string[]=[sRecClassName_KLADR,
+                               sRecClassName_STREET,
+                               sRecClassName_SOCRBASE,
+                               sRecClassName_ALTNAMES,
+                               sRecClassName_DOMA,
+                               sRecClassName_FLAT];
+-- func GetAbsolutePathName(sFileName:string):string;
+-- var oFSO:AutoObject;
+-- oFSO=AutoObject.Create("Scripting.FileSystemObject");
+-- Result = oFSO.GetAbsolutePathName(sFileName);
+-- end;
+
+proc message(sMsg:string);
+  MessageBox(0, sMsg, "Сообщение", MB_OK+MB_ICONEXCLAMATION);
+end;
+
+proc hint(sMsg:string; iPartValue: integer=0; iTotalValue: integer=0);
+  
+end;
+
+proc trace(sMsg:string);
+ --sMsg = sMsg;
+end;
+
+ func testBCPFiles(FT:ftKLADR): logical;
+ var sBCPName, locFileNameZip, locFileNameFmt: String;
+ sBCPName = sKLADRName[FT as integer];
+ locFileNameZip=СИС2.Файл.GetFullFileName(sPrjKladrBCPFolder,sBCPName+".zip");
+ locFileNameFmt=СИС2.Файл.GetFullFileName(sPrjKladrBCPFolder,sBCPName+"_bcp_fmt.xml");
+ if not existfile(locFileNameZip) :
+  --message("Не найден файл '"+GetAbsolutePathName(locFileNameZip)+"'!",mtWarning);
+  message("Не найден файл '"+locFileNameZip+"'!");
+ elsif not existfile(locFileNameFmt) :
+  --message("Не найден файл '"+GetAbsolutePathName(locFileNameFmt)+"'!",mtWarning);
+  message("Не найден файл '"+locFileNameFmt+"'!");
+ else
+  result=true;
+ fi;
+ end;
+
+proc SyncKladrBCPFolder;
+   -- Копирование папки бэкапов таблиц КЛАДРа на клиент
+  --var sPrjKladrBCPFolder, sLocKladrBCPFolder: String;
+  var aFiles: String[];
+  var iter,ifiles: Integer;
+  --sPrjKladrBCPFolder = sessioninfo.InfoBase.ProjectByName[self.ClassProject].folder+sKladrBCPFolderDyDefault;
+  if existfolder(sPrjKladrBCPFolder) then
+    -- синхронизация файлов
+    --sLocKladrBCPFolder = Sessioninfo.localfolder + sKladrBCPFolderDyDefault;
+    if not existfolder(sSrvKladrBCPFolder) :
+     createfolder(sSrvKladrBCPFolder);
+    fi;
+    if existfolder(sSrvKladrBCPFolder) :
+     aFiles=getfilelist(sPrjKladrBCPFolder,"*.*",[FindOnlyFiles]);
+     ifiles=LengthOfArray(aFiles);
+     hint("Ждите... загрузка бэкапов справочника КЛАДР",0,ifiles);
+     for iter = 1..ifiles do
+      hint("Ждите... загрузка бэкапов справочника КЛАДР",iter,ifiles);
+      with сис2.файл do
+       СинхронизироватьФайлы(aFiles[iter],sSrvKladrBCPFolder+ExtractFileName(aFiles[iter]));
+      end;
+     od;
+     hint("Загрузка бэкапов справочника КЛАДР",ifiles,ifiles);
+    fi;
+  fi;
+end;
+
+proc ЗагрузитьСправочник(FT:ftKLADR);
+--TRUNCATE TABLE [КЛАДР_отладка_2018_04].[dbo].[Улица]
+--BULK INSERT [КЛАДР_отладка_2018_04].[dbo].[Улица]
+--FROM 'C:\work\ПЗ\Мусеев\T-SQL_МассовыйИмпорт\street_from_bcp\street.bcp'
+--WITH (
+--DATAFILETYPE = 'char' ,
+--CODEPAGE = 'RAW' ,
+--TABLOCK ,
+--KEEPIDENTITY ,
+--FORMATFILE = 'C:\work\ПЗ\Мусеев\T-SQL_МассовыйИмпорт\street_from_bcp\street_bcp_fmt.xml',
+--ERRORFILE = 'C:\work\ПЗ\Мусеев\T-SQL_МассовыйИмпорт\street_from_bcp\street.err'
+--)
+-- скопировать исходные файлы на клиент
+-- сгенерить t-sql скрипт
+-- выполнить его
+--var   sLocKladrBCPFolder, sPrjKladrBCPFolder: String;
+var locFileNameZip, locFileNameBCP, locFileNameFmt, locFileNameErr : String;
+var sBCPName, locRecClassName: String;
+var oUnZip: Библио.Unzip;
+var sSQL: string;
+var locRecClass: class record;
+trace("SessionInfo.TempFolder="+SessionInfo.TempFolder);
+trace("SessionInfo.SharedFolder="+SessionInfo.SharedFolder);
+trace("SessionInfo.LocalFolder="+SessionInfo.LocalFolder);
+--trace("SessionInfo.ConnectFolder="+SessionInfo.ConnectFolder);
+--trace("SessionInfo.CommonIBFolder="+SessionInfo.CommonIBFolder);
+--trace("SessionInfo.MyDocumentsFolder="+SessionInfo.MyDocumentsFolder);
+trace("Projectinfo.folder="+baseinfo.ProjectByName[self.ClassProject].folder);
+
+--SessionInfo.TempFolder=C:\T94\Temp\ -- локальный
+--SessionInfo.SharedFolder=C:\T94\Data\КЛАДР_Тестирование_20180427\Shared\ -- на серввере
+--SessionInfo.LocalFolder=C:\T94\Users\Мой компьютер\КЛАДР_Тестирование_20180427\ -- локальный
+--SessionInfo.ConnectFolder=C:\T94\Users\ -- локальный
+--SessionInfo.CommonIBFolder=C:\T94\Users\Мой компьютер\КЛАДР_Тестирование_20180427\Common\
+--SessionInfo.MyDocumentsFolder=C:\Documents and Settings\ruslan\My Documents\
+
+if testBCPFiles(FT):
+  SyncKladrBCPFolder;
+  sBCPName= if(FT = ftKLADR_SOCRBASE,sBCPFileName_SOCRBASE,
+            if(FT = ftKLADR_KLADR,sBCPFileName_KLADR,
+            if(FT = ftKLADR_STREET,sBCPFileName_STREET,
+            if(FT = ftKLADR_ALTNAMES,sBCPFileName_ALTNAMES,
+            if(FT = ftKLADR_DOMA,sBCPFileName_DOMA,sBCPFileName_FLAT)))));
+  locFileNameZip=СИС2.Файл.GetFullFileName(sSrvKladrBCPFolder,sBCPName+".zip");
+  locFileNameBcp=СИС2.Файл.GetFullFileName(sSrvKladrBCPFolder,sBCPName+".bcp");
+  locFileNameFmt=СИС2.Файл.GetFullFileName(sSrvKladrBCPFolder,sBCPName+"_bcp_fmt.xml");
+  locFileNameErr=СИС2.Файл.GetFullFileName(sSrvKladrBCPFolder,sBCPName+".err");
+  if existfile(locFileNameZip):
+   if existfile(locFileNameFmt):
+     if existfile(locFileNameBcp):
+      removefile(locFileNameBcp);
+     fi;
+     -- здесь распаковать
+     oUnZip = Библио.Unzip.Create;
+     with oUnZip do
+      setfield("ZipFileName", locFileNameZip);
+      setfield("DestFolder", sSrvKladrBCPFolder);
+      setfield("DestFileName", sBCPName+".bcp");
+      unzip;
+     end;
+     if existfile(locFileNameErr) :
+      removefile(locFileNameErr);
+     fi;
+     -- создать скрипт t-sql
+     --ExecuteSQL(vSQL, Пресс.Справочники.Товар);
+     locRecClassName=if(FT = ftKLADR_SOCRBASE,sRecClassName_SOCRBASE,
+                     if(FT = ftKLADR_KLADR,sRecClassName_KLADR,
+                     if(FT = ftKLADR_STREET,sRecClassName_STREET,
+                     if(FT = ftKLADR_ALTNAMES,sRecClassName_ALTNAMES,
+                     if(FT = ftKLADR_DOMA,sRecClassName_DOMA,sRecClassName_FLAT)))));
+     locRecClass=findClass(locRecClassName);
+     if locRecClass <> nil :
+      sSQL="TRUNCATE TABLE [dbo].["+locRecClass.ClassInfo.DBTableName+"]"+CRLF+
+           "BULK INSERT .[dbo].["+locRecClass.ClassInfo.DBTableName+"]"+CRLF+
+           "FROM '"+locFileNameBcp+"'"+CRLF+
+           "WITH ("+CRLF+
+           "DATAFILETYPE = 'char' ,"+CRLF+
+           "CODEPAGE = 'RAW' ,     "+CRLF+
+           "TABLOCK ,              "+CRLF+
+           "KEEPIDENTITY ,         "+CRLF+
+           "FORMATFILE = '"+locFileNameFmt+"',"+CRLF+
+           "ERRORFILE = '"+locFileNameErr+"')"+CRLF;
+      hint("Ждите... Загрузка данных в классификатор "+locRecClassName);
+      executeSQL(sSQL,locRecClass);
+     fi;
+   fi;
+  fi;
+fi;
+end;
+
+proc ЗагрузитьСправочник_socrbase;
+ЗагрузитьСправочник(ftKLADR_SOCRBASE);
+end;
+proc ЗагрузитьСправочник_kladr;
+ЗагрузитьСправочник(ftKLADR_KLADR);
+end;
+proc ЗагрузитьСправочник_street;
+ЗагрузитьСправочник(ftKLADR_STREET);
+end;
+proc ЗагрузитьСправочник_altnames;
+ЗагрузитьСправочник(ftKLADR_ALTNAMES);
+end;
+proc ЗагрузитьСправочник_doma;
+ЗагрузитьСправочник(ftKLADR_DOMA);
+end;
+proc ЗагрузитьСправочник_flat;
+ЗагрузитьСправочник(ftKLADR_FLAT);
+end;
+
+end

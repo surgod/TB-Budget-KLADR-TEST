@@ -1,0 +1,103 @@
+extends СИС2.WinAPI;
+
+inclass
+
+Const LOCALE_SDECIMAL        :Integer = 0x0E  ; -- decimal separator
+Const LOCALE_STHOUSAND       :Integer = 0x0F  ; -- thousand separator
+Const LOCALE_SGROUPING       :Integer = 0x10  ; -- grouping
+Const LOCALE_ILZERO          :Integer = 0x12  ; -- Leading zero
+Const LOCALE_SCURRENCY       :Integer = 0x14  ; -- local symbol
+Const LOCALE_SINTLSYMBOL     :Integer = 0x15  ; -- intl symbol
+Const LOCALE_SMONDECIMALSEP  :Integer = 0x16  ; -- decimal separator
+Const LOCALE_SMONTHOUSANDSEP :Integer = 0x17  ; -- thousand separator
+Const LOCALE_SMONGROUPING    :Integer = 0x18  ; -- grouping
+Const LOCALE_ICURRDIGITS     :Integer = 0x19  ; -- # local digits
+Const LOCALE_IINTLCURRDIGITS :Integer = 0x1A  ; -- # intl digits
+Const LOCALE_ICURRENCY       :Integer = 0x1B  ; -- pos currency mode
+Const LOCALE_INEGCURR        :Integer = 0x1C  ; -- neg currency mode
+Const LOCALE_IPOSSIGNPOSN    :Integer = 0x52  ; -- pos sign position
+Const LOCALE_INEGSIGNPOSN    :Integer = 0x53  ; -- neg sign position
+Const LOCALE_IPOSSYMPRECEDES :Integer = 0x54  ; -- mon sym precedes pos amt
+Const LOCALE_IPOSSEPBYSPACE  :Integer = 0x55  ; -- mon sym sep by space from pos amt
+Const LOCALE_INEGSYMPRECEDES :Integer = 0x56  ; -- mon sym precedes neg amt
+Const LOCALE_INEGSEPBYSPACE  :Integer = 0x57  ; -- mon sym sep by space from neg amt
+Const LOCALE_SENGCURRNAME    :Integer = 0x1007; -- english name of currency
+Const LOCALE_SNATIVECURRNAME :Integer = 0x1008; -- native name of currency
+Const LOCALE_RETURN_NUMBER   :Integer = 0x20000000; --
+
+--  external func SetForegroundWindow(HWND: Integer): Logical;
+--    library "user32" name "SetForegroundWindow";
+--
+--  external func GetInputState: Boolean; -- во время выполнения процедуры или функции позволяет узнать щелчек мыши или нажатие кнопки в это время, что позволяет к примеру выйти досрочно из процедуры
+--    library "user32" name "GetInputState";
+--
+--  external func GetTickCount: Integer; --
+--    library "kernel32" name "GetTickCount";
+
+
+
+external func GetThreadLocale: Integer;
+    Library "kernel32" name "GetThreadLocale";
+
+external func GetSystemDefaultLCID: Integer;
+    Lirary "kernel32" name "GetSystemDefaultLCID";
+
+external func GetUserDefaultLCID: Integer;
+    Library "kernel32" name "GetUserDefaultLCID";
+
+external func GetLocaleInfo(Locale: integer;
+                            LcType: integer;
+                            var lpLCData: string;
+                            cchData:integer): Integer;
+   #if Unicode then
+    Library "kernel32" name "GetLocaleInfoW";
+   #else
+    Library "kernel32" name "GetLocaleInfoA";
+   #end
+
+external func GetLocaleInfoI(Locale: integer;
+                             LcType: integer;
+                             var lpLCData: integer;
+                             cchData:integer): Integer;
+   #if Unicode then
+    Library "kernel32" name "GetLocaleInfoW";
+   #else
+    Library "kernel32" name "GetLocaleInfoA";
+   #end
+
+Const LOCALE_CUSTOM_DEFAULT     :Integer = 0x0C00;
+Const LOCALE_CUSTOM_UI_DEFAULT  :Integer = 0x1400;
+Const LOCALE_CUSTOM_UNSPECIFIED :Integer = 0x1000;
+Const LOCALE_INVARIANT          :Integer = 0x007F;
+Const LOCALE_SYSTEM_DEFAULT     :Integer = 0x0800;
+Const LOCALE_USER_DEFAULT       :Integer = 0x0400;
+
+external func GetCurrencyFormat(const LCID: Integer;
+                            const Flags: Integer;
+                            const LPCSTR: String;
+                            const CURRENCYFMTA: string;
+                            var LPSTR: String;
+                            const cchCurrency: Integer):Integer;
+
+   #if Unicode then
+    Library "kernel32" name "GetCurrencyFormatW";
+   #else
+    Library "kernel32" name "GetCurrencyFormatA";
+   #end
+--https://docs.microsoft.com/ru-ru/windows/desktop/api/winnls/nf-winnls-getcurrencyformata
+--https://docs.microsoft.com/ru-ru/windows/desktop/api/winnls/nf-winnls-getcurrencyformatw
+--http://vbnet.mvps.org/index.html?code/locale/localecurrency.htm
+--http://jasinskionline.com/WindowsAPI/ref/g/getcurrencyformat.html
+--http://platonov-andrei.narod.ru/Delphi/FuncAPI/
+--http://rusproject.narod.ru/winapi/g/getlocaleinfo.html
+--http://netcode.ru/cpp/?artID=3162
+
+Const ERROR_INSUFFICIENT_BUFFER:Integer = 0x7A;-- A supplied buffer size was not large enough, or it was incorrectly set to NULL.
+Const ERROR_INVALID_FLAGS:Integer = 0x3EC ;    -- The values supplied for flags were not valid.
+Const ERROR_INVALID_PARAMETER:Integer = 0x57 ; -- Any of the parameter values was invalid.
+
+external func GetLastError:integer;
+    Library "kernel32" name "GetLastError";
+
+
+end

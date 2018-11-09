@@ -1,0 +1,252 @@
+class "Использование прямых SQL запросов ";
+
+inclass
+
+const ErrorBase : integer = 6901; -- база кодов ошибок класса
+const ErrorPrompt : string = "Ошибка в классе совместимости с ТБ 6.9: SQL запросы";
+var   CRLF: String = chr(13)+chr(10);
+
+-- Способ подключения к источнику данных. Возможные значения:
+const adConnectUnspecified: Integer = -1; -- Открывает подключение синхронно. По умолчанию
+const adAsyncConnect: Integer = 16; -- открывает подключение асинхронно.
+                                    -- Чтобы определить, когда подключение станет доступным,
+                                    -- можно обрабатывать событие ConnectComplete.
+-- Определяет расположение курсора
+const adUseNone: Integer = 1;   -- Не использовать курсор (устарело; только ради совместимости)
+const adUseServer: Integer = 2; -- Курсор на стороне сервера. (по умолчанию)
+const adUseClient: Integer = 3; -- Курсор на стороне клиента.
+                                -- Может обеспечивать дополнительные возможности
+                                -- (например, сортировку).
+
+-- Тип курсора для Recordset
+const adOpenUnspecified: Integer = -1; -- тип курсора не определён
+const adOpenForwardOnly: Integer = 0; -- определяет forward-only курсор.
+                                      -- То же, что и статический курсор, но вы можете
+                                      -- прокручивать записи только вперед.
+                                      -- Это оптимизирует выполнение, если вы должны сделать
+                                      -- только один проход по Recordset'у.
+const adOpenKeyset: Integer = 1; -- Определяет keyset-курсор.
+                                 -- То же, что и динамический курсор,
+                                 -- но вы не можете видеть записи, добавляемые другими
+                                 -- пользователями, хотя записи, удаляемые другими пользователями,
+                                 -- недоступны в вашем Recordset'е.
+                                 -- Изменения данных другими пользователями видимы.
+const adOpenDynamic: Integer = 2; -- Определяет динамический курсор.
+                                  -- Добавления, изменения и удаления другими пользователями видимы;
+                                  -- разрешены все типы движения через Recordset, исключая закладки,
+                                  -- если провайдер их не поддерживает.
+const adOpenStatic: Integer = 3;  -- Определяет статический курсор.
+                                  -- Статическая копия набора записей, которую вы можете использовать,
+                                  -- чтобы найти данные или генерировать отчёты.
+                                  -- Добавления, изменения или удаления другими пользователями не видимы.
+-- Тип команды. Возможные значения:
+const adCmdUnspecified: Integer = -1; -- тип команды не определён.
+const adCmdText: Integer = 1; -- текстовое определение команды или хранимой процедуры.
+const adCmdTable: Integer = 2; -- создать SQL-запрос, который вернёт все строки указанной таблицы.
+const adCmdStoredProc: Integer = 4; -- хранимая процедура.
+const adCmdUnknown: Integer = 8; -- тип команды неизвестен (по умолчанию).
+
+
+
+-- LockType - тип блокировки для Recordset, который будет открыт.
+-- Возможные значения:
+const adLockUnspecified: Integer = -1; -- тип блокировки не определён.
+const adLockReadOnly: Integer = 1; -- только для чтения. Вы не можете изменить данные.
+const adLockPessimistic: Integer = 2; -- Пессимистическая блокировка.
+                                      -- Провайдер гарантирует успешное редактирование записей.
+                                      -- Запись блокируется сразу после начала редактирования
+                                      -- и до момента сохранения записей.
+const adLockOptimistic: Integer = 3; -- Оптимистическая блокировка.
+                                     -- Провайдер осуществляет блокировку записей
+                                     -- только в момент сохранения изменений, т.е.
+                                     -- когда вы вызываете метод Update().
+const adLockBatchOptimistic: Integer = 4; -- оптимистические пакетные модификации.
+                                          -- Требуется для пакетного режима модификации
+                                          -- (отложенное сохранение записей).
+
+
+-- Состояние объекта. Только чтение.
+
+const adStateClosed: Integer = 0; -- объект закрыт.
+const adStateOpen: Integer =1; -- объект открыт.
+const adStateConnecting: Integer = 2; -- объект соединяется.
+const adStateExecuting: Integer = 4; -- объект выполняет команду.
+const adStateFetching: Integer =8; -- объект выполняет выборку строк.
+
+
+var FRecordsCount: Integer; -- количество записей
+var ИмяТекКартотеки: String;
+var FFieldsName: string[];
+var FFieldsCount: Integer;
+var FData: variant[2];
+
+proc OpenWorkAreaSQL(ИмяБД: String=""; sSQL :String; ИмяКартотеки :String=""; Пакет:Integer=0);
+  Var vConnection, vRecordset, vFields :AutoObject;
+  Var iField  :Integer;
+  var rClass:class record;
+  var sServerName:string;
+  --var sProviderNames:string;
+  FRecordsCount = 0;
+  ИмяТекКартотеки = ИмяКартотеки;
+  vConnection = AutoObject.Create("ADODB.Connection");
+  trace("vConnection.OleClassName="+vConnection.OleClassName);
+  trace("vConnection.ObjectName="  +vConnection.ObjectName);
+  trace("vConnection.ServerName="  +vConnection.ServerName);
+  if ИмяБД="":
+   rClass=findclass(ИмяКартотеки) as class record;
+   if rClass=nil :
+    rClass=Kernel.Settings.User;
+   fi;
+   ИмяБД=rClass.ClassInfo.DataBaseName;
+  fi;
+  if ИмяБД="" :
+    SetError(ErrorBase, "Не известно имя базы данных", ErrorPrompt, itError);
+  fi;
+  sServerName=GetSQLServerName(rClass);
+  vConnection.ConnectionString =
+    "Provider=SQLOLEDB.1;"+
+    "Integrated Security=SSPI;"+
+    "Persist Security Info=False;" +
+    "Use Procedure for Prepare=1;" +
+    "Auto Translate=True;" +
+    "Packet Size=16384;" +
+    "Use Encryption for Data=False;" +
+    "Tag with column collation when possible=False;"+
+    "Application Name="+Библио.ТБ69.Version(true)+";" +
+    "Initial Catalog=" + ИмяБД + ";" +
+    "Data Source=" + sServerName + ";";
+  try
+    vConnection.Invoke("Open", vConnection.ConnectionString, '', '', adConnectUnspecified);
+    try
+      vRecordset = AutoObject.Create("ADODB.Recordset");
+      trace("vRecordset.OleClassName="+vRecordset.OleClassName);
+      trace("vRecordset.ObjectName="+vRecordset.ObjectName);
+      trace("vRecordset.ServerName="+vRecordset.ServerName);
+      vRecordset.CursorLocation = adUseServer;
+      vRecordset.Invoke("Open", sSQL, vConnection, adOpenForwardOnly,
+        adLockReadOnly, adCmdText);
+      try
+        while vRecordset <> nil and vRecordset.State <> adStateOpen do
+          --vRecordset = vRecordset.NextRecordset(iField);
+        end;
+        vFields = vRecordset.Fields;
+        FFieldsCount = Integer(vFields.Count);
+        for iField = 0..FFieldsCount - 1 do
+          FFieldsName[iField+1] = String(vFields.Item[iField].Name);
+        end;
+        while not Logical(vRecordset.EOF) do
+           FRecordsCount = FRecordsCount + 1;
+           for iField = 1..FFieldsCount do
+             FData[iField,FRecordsCount] = vFields.Item[iField-1].Value;
+           end;
+           vRecordset.MoveNext;
+        end;
+      finally
+        vFields = nil;
+      end;
+      vRecordset.Invoke("Close");
+    finally
+      vRecordset = nil;
+      --vConnection.GetProviderNames(sProviderNames);
+      --trace(sProviderNames);
+      vConnection.Invoke("Close");
+    end;
+  finally
+    vConnection = nil;
+  end;
+end;
+
+func GetRealCardFileName synonym   ВзятьДействитИмяКартотеки (vCardFileName:variant):string;
+var LocRecClass: class record;
+if    vartype(vCardFileName)=varClass :
+ if vCardFileName is class record:
+  LocRecClass = vCardFileName;
+ fi;
+elsif vartype(vCardFileName)=varString :
+ if findclass(vCardFileName) is class record:
+  LocRecClass = findclass(vCardFileName);
+ fi;
+fi;
+if LocRecClass<>nil :
+ result="[" + LocRecClass.classinfo.DataBaseName +
+        "].[dbo].[" +
+        LocRecClass.classinfo.DBTableName + "]";
+fi;
+end;
+
+ func GetAsArraySQL synonym ВзятьКакМассивSQL(iWorkArea:Integer; BlankName:String; sFieldsName:string): integer;
+ end;
+--
+func GetSQLVersion(sRecClassName:variant=""):String;
+var sSQL: string;
+var locRecClass: class record;
+var ares:variant[];
+if    vartype(sRecClassName)=varClass :
+ if sRecClassName is class record:
+  LocRecClass = sRecClassName;
+ fi;
+elsif vartype(sRecClassName)=varString :
+ if findclass(sRecClassName) is class record:
+  LocRecClass = findclass(sRecClassName);
+ else
+  LocRecClass = findclass("Kernel.Settings.User") as class record;
+ fi;
+fi;
+if LocRecClass<>nil :
+  try
+    sSQL="if exists (SELECT * FROM [dbo].[sysobjects] WHERE name='test_getversion' and xtype='P')"+crlf+
+         "drop procedure  [dbo].[test_getversion]";
+    executesql(sSQL);
+    sSQL="create procedure [dbo].[test_getversion] @var1 as varchar(1000) output as set @var1=convert(varchar(max),@@VERSION);";
+--sSQL = "CREATE PROCEDURE [dbo].[test_getversion]" + crlf +
+--         "@var1 varchar(256) output" + crlf +
+--         "AS"  + crlf +
+--         "SET @var1 = convert(varchar(max),@@VERSION);";
+    executesql(sSQL,locRecClass);
+    ares=[nil];
+    executesql("test_getversion",locRecClass,["@var1"],ares,true);
+    result=ares[1];
+    sSQL="if exists (SELECT * FROM [dbo].[sysobjects] WHERE name='##getversion' and xtype='P')"+crlf+
+         "drop procedure  [dbo].[test_getversion]";
+    executesql(sSQL);
+  except
+  end;
+fi;
+end;
+
+func GetSQLServerName(sRecClassName:variant=""):String;
+var sSQL: string;
+var locRecClass: class record;
+var ares:variant[];
+if    vartype(sRecClassName)=varClass :
+ if sRecClassName is class record:
+  LocRecClass = sRecClassName;
+ fi;
+elsif vartype(sRecClassName)=varString :
+ if findclass(sRecClassName) is class record:
+  LocRecClass = findclass(sRecClassName);
+ else
+  LocRecClass = findclass("Kernel.Settings.User") as class record;
+ fi;
+fi;
+if LocRecClass<>nil :
+  try
+    sSQL="if exists (SELECT * FROM [dbo].[sysobjects] WHERE name='test_getversion' and xtype='P')"+crlf+
+         "drop procedure  [dbo].[test_getversion]";
+    executesql(sSQL);
+    sSQL="create procedure [dbo].[test_getversion] @var1 as varchar(1000) output as set @var1=convert(varchar(max),@@SERVERNAME);";
+    executesql(sSQL,locRecClass);
+    ares=[nil];
+    executesql("test_getversion",locRecClass,["@var1"],ares,true);
+    result=ares[1];
+    sSQL="if exists (SELECT * FROM [dbo].[sysobjects] WHERE name='##getversion' and xtype='P')"+crlf+
+         "drop procedure  [dbo].[test_getversion]";
+    executesql(sSQL);
+  except
+  end;
+fi;
+end;
+
+inobject
+
+end

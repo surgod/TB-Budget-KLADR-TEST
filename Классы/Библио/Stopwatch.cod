@@ -1,0 +1,56 @@
+class "Секундомер" synonym Секундомер ;
+
+inclass
+
+func Create: UserObject;
+  result= inherited Create;
+  result.nStart=IntervalSec;
+  result.InAction=true;
+end;
+
+inobject private
+
+nStart: Numeric;
+nStop: Numeric;
+InAction: Logical;
+
+func Time2String(nSec: Numeric): String;
+ result=str(int(trunc(nSec/3600,0)),"00")+":"+
+        str(int(trunc((nSec-trunc(nSec/3600,0)*3600)/60,0)),"00")+":"+
+        str(int(nSec-trunc(nSec/3600,0)*3600-trunc((nSec-trunc(nSec/3600,0)*3600)/60,0)*60),"00");
+end;
+
+func Time2StringEx(nSec: Numeric): String;
+ if    trunc(nSec/3600,0)>0 then
+  result=str(trunc(nSec/3600,0),0)+" ч. "+
+         str(trunc((nSec-trunc(nSec/3600,0)*3600)/60,0),0)+" м. "+
+         str(nSec-trunc(nSec/3600,0)*3600-trunc((nSec-trunc(nSec/3600,0)*3600)/60,0)*60,0)+" сек.";
+ elsif trunc(nSec/60,0)>0 then
+  result=str(trunc(nSec/60,0),0)+" м. "+str(nSec-trunc(nSec/60,0)*60,0)+" сек.";
+ else
+  result=str(nSec,0)+" сек.";
+ fi;
+end;
+
+inobject public
+
+proc Stop;
+  nStop=IntervalSec;
+  InAction=false;
+end;
+
+proc Start;
+  nStart=IntervalSec;
+  InAction=true;
+end;
+
+func Take: String;
+ Result = Time2String(nStop - nStart);
+end;
+
+func TakeEx: String;
+ Result = Time2StringEx(nStop - nStart);
+end;
+
+
+end

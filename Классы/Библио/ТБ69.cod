@@ -1,0 +1,710 @@
+class "Стандартные функции ТБ69";
+
+inclass public
+
+const ErrorBase : integer = 6900; -- база кодов ошибок класса
+const ErrorPrompt : string = "Ошибка в классе совместимости с ТБ 6.9:";
+
+  func МАСЧ(sAcc: string): string;
+    Result = if(length(sAcc)=1,"0","")+sAcc;
+  end;
+
+
+func Месяца(nMon: numeric): string;
+ var imon: integer;
+ imon=int(nMon);
+ if imon>12 then
+  imon=imon-int(trunc(imon/12,0))*12;
+ fi;
+ result=if(imon=1:"января"|
+           imon=2:"февраля"|
+           imon=3:"февраля"|
+           imon=4:"февраля"|
+           imon=5:"февраля"|
+           imon=6:"февраля"|
+           imon=7:"февраля"|
+           imon=8:"февраля"|
+           imon=9:"февраля"|
+           imon=10:"февраля"|
+           imon=11:"февраля"|
+           imon=12:"февраля","");
+end;
+ 
+func recordtostring(rRef:record): string;
+result=if(rRef.DocID=0,"{}","{"+str(rRef.DocID)+"}") ;
+end;
+
+func datetostring(dDate:date):string;
+return str(dDate);
+end;
+
+proc clearvariable(var vVar:variant);
+ vVar=nil;
+end;
+
+func time:integer;
+var dNow:date;
+return int(periodsec(dat(day(dNow),mon(dNow),year(dNow)),dNow));
+end;
+
+func stringtonumeric(snumber:string):numeric;
+fromstr(Result,snumber);
+end;
+
+func blankexist(sBlankName:string):logical;
+  Result = findclass(sBlankName)<>nil;
+end;
+
+--proc Message(sMsg:string);
+-- enquiry("Сообщение",sMsg,["ОК"],,itInformation);
+--end;
+
+--siconType:string=if(iconType=mtWarning:"mtWarning"|
+--                    iconType=mtInformation:"mtInformation"|
+--                    iconType=mtConfirmation:"mtConfirmation"|
+--                    iconType=mtError:"mtError"|
+--                    iconType=mtCustom:"mtCustom","");
+
+type mtTypes = (
+  mtWarning = 0,
+  mtError = 1,
+  mtInformation = 2,
+  mtConfirmation = 3,
+  mtCustom = 4,
+  mtWinLogo = 5,
+  тсПредупреждение = mtWarning,
+  тсОшибка = mtError,
+  тсИнформация = mtInformation,
+  тсПодтверждение = mtConfirmation,
+  тсПроизвольное = mtCustom,
+  тсСистема = mtWinLogo
+);
+
+--const тсПредупреждение :mtTypes = mtWarning;
+--const тсОшибка :mtTypes = mtError;
+--const тсИнформация :mtTypes = mtInformation;
+--const тсПодтверждение :mtTypes = mtConfirmation;
+--const тсПроизвольное :mtTypes = mtCustom;
+--const тсСистема :mtTypes = mtWinLogo;
+func Version(lEng: Logical = false): String;
+  with ProcessInfo do
+    if lEng:
+      Result = name + " "+ Str(Version) + "(" + edition + ") build " + ToStr(Build);
+    else
+      Result = name + " "+ Str(Version) + "(" + edition + ") сборка " + ToStr(Build);
+    fi;
+  od;
+end;
+
+func IconType(IconType: mtTypes): IconType;
+  Result = if(IconType = mtInformation, itInformation,
+           if(IconType = mtConfirmation, itQuestion,
+           if(IconType = mtWarning, itWarning,
+           if(IconType = mtError, itError,
+           if(IconType = mtCustom, nil,
+           if(IconType = mtWinLogo, itWinLogo, nil))))));
+end;
+
+proc Message(sMsg: String; IconType: mtTypes = mtInformation);
+  Console.Enquiry(if(IconType = mtInformation, "Сообщение",
+                  if(IconType = mtConfirmation, "Подтверждение",
+                  if(IconType = mtWarning, "Предупреждение",
+                  if(IconType = mtError, "Ошибка",
+                  if(IconType = mtCustom, Version(true),
+                  if(IconType = mtWinLogo, Version(true),
+                  "")))))), sMsg, ["ОК"], ,
+                  if(IconType = mtInformation, itInformation,
+                  if(IconType = mtConfirmation, itQuestion,
+                  if(IconType = mtWarning, itWarning,
+                  if(IconType = mtError, itError,
+                  if(IconType = mtCustom, nil,
+                  if(IconType = mtWinLogo, itWinLogo,
+                  itInformation)))))));
+end;
+
+func Enquiry(Заголовок: String; Вопрос: String; ТекстНаКнопках: String[]; ТипДиалога: mtTypes): Integer;
+  if Заголовок = "":
+    Заголовок= if(ТипДиалога = mtInformation, "Сообщение",
+               if(ТипДиалога = mtConfirmation, "Подтверждение",
+               if(ТипДиалога = mtWarning, "Предупреждение",
+               if(ТипДиалога = mtError, "Ошибка",
+               if(ТипДиалога = mtCustom, Version(true),
+               if(ТипДиалога = mtWinLogo, Version(true),
+               ""))))));
+  fi;
+  return Console.Enquiry (Заголовок, Вопрос, ТекстНаКнопках, , IconType(ТипДиалога));
+end;
+
+--func stringtorecord(sref: string): class record;
+--result.docid=int(substr(sref,2,length(sref)-2));
+--end;
+
+--@doc эмуляция функции ТБ 6.9 format,
+--@doc спецификация подстановки функции format "%" [index ":"] ["-"] [width] ["." prec] type
+
+const sFormatTypes: String = "defgnmsxDEFGNMSX";
+var lThousandSepG: Logical := False; -- использовать разделитель триад в формате G
+
+--@doc типы подстановок в функции format
+type fmType = (
+fmtD=1,
+fmtE,
+fmtF,
+fmtG,
+fmtN,
+fmtM,
+fmtS,
+fmtX);
+
+--@doc эмуляция функции ТБ 6.9 format
+--@doc значения для подстановок задаются в массиве variant[]
+func format(sBuf: String; vparams: Variant[]): String;
+  if LengthOfArray(vparams) > 10 :
+     SetError(ErrorBase, "Количество параметров-подстановок больше 10!",
+                         ErrorPrompt, itError);
+  fi;
+  return format6(sBuf, vparams[1], vparams[2], vparams[3],
+                       vparams[4], vparams[5], vparams[6],
+                       vparams[7], vparams[8], vparams[9], vparams[10]);
+end;
+
+--@doc эмуляция функции ТБ 6.9 format
+--@doc значения для подстановок задаются в 2 - 11 параметрах функции
+func format6(sBuf: String;
+             vPar0: Variant = nil;
+             vPar1: Variant = nil;
+             vPar2: Variant = nil;
+             vPar3: Variant = nil;
+             vPar4: Variant = nil;
+             vPar5: Variant = nil;
+             vPar6: Variant = nil;
+             vPar7: Variant = nil;
+             vPar8: Variant = nil;
+             vPar9: Variant = nil): String ;
+  var ipos, ispecpos, iIndex, iWidth, iPrec, iParCnt: Integer;
+  var iParQuantyti: Integer;
+  var fType: fmType;
+  var locResult, sSpec: String;
+  var vIndex, vWidth, vPrec, vPar: Variant;
+  var lJustify, lPrec: Logical;
+  var aPar: Variant[];
+
+  func isDigit(sub: String): Logical;
+    Result = CharPos("0123456789", sub[1]) = 1;
+  end;
+
+  func GetParQuantyti: Integer;
+    if    vartype(vPar0) = varNull:
+      Result = 0;
+    elsif vartype(vPar1) = varNull:
+      Result = 1;
+    elsif vartype(vPar2) = varNull:
+      Result = 2;
+    elsif vartype(vPar3) = varNull:
+      Result = 3;
+    elsif vartype(vPar4) = varNull:
+      Result = 4;
+    elsif vartype(vPar5) = varNull:
+      Result = 5;
+    elsif vartype(vPar6) = varNull:
+      Result = 6;
+    elsif vartype(vPar7) = varNull:
+      Result = 7;
+    elsif vartype(vPar8) = varNull:
+      Result = 9;
+    elsif vartype(vPar9) = varNull:
+      Result = 9;
+    else
+      Result = 10;
+    fi;
+  end;
+
+  --@doc установить номер текущей подстановки
+  proc setParCnt(iValue: Integer);
+   if iValue> iParQuantyti :
+     SetError(ErrorBase, "Ошибка в строке формата: больше "+
+                         ToStr(iParQuantyti) + " подстновок",
+                         ErrorPrompt, itError);
+   else
+    iParCnt = iValue;
+   fi;
+  end;
+
+  --func PutSepBy(sSep, sSumple:String; iLen:Integer): String;
+  --var iPos: Integer;
+  -- if iLen>0 :
+  --   ipos=iLen+1;
+  --   while ipos<=length(sSumple) do
+  --    sSumple= insert(sSep,sSumple,ipos);
+  --    ipos = ipos + iLen + 1;
+  --   od;
+  -- fi;
+  -- Result = sSumple;
+  --end;
+
+  --@doc десятичный логарифм
+  func lg(nPar: Numeric): Numeric;
+    Result = log(nPar) / log(10);
+  end;
+
+  func NearInteger(nPar: Numeric): Logical;
+    Result = abs(nPar - int(nPar)) < СИС2.Математика.МашиннаяДельта;
+  end;
+
+
+  --@doc получить десятичный разряд
+  func GetDecDegree(nPar:Numeric; iDeg:INteger): Integer;
+    Result = Int(Trunc(nPar / Power(10, iDeg - 1)) -
+                 Trunc(Trunc(nPar / Power(10, iDeg-1)) / 10) * 10);
+    if Result < 0:
+     Result = 0;
+    fi;
+  end;
+
+  --@doc определение порядка десятичного числа
+  func GetExponent(nPar: Numeric): Integer;
+    nPar = lg(npar);
+    Result = Int(Trunc(nPar, 0));
+    if nPar<0 and not NearInteger(nPar):
+     Result = Result - 1;
+    fi;
+  end;
+
+  --@doc корректировка параметра точность
+  func GetPrecByDef(iPrec:Integer; lPrec:Logical; fType:fmType): Integer;
+    if lPrec:
+      if fType = fmtE:
+        if iPrec <= 2:
+          iPrec = 2;
+        elsif iPrec > 18:
+          iPrec = 15;
+        fi;
+      elsif fType = fmtG:
+        if iPrec <= 2:
+          iPrec = 2;
+        elsif iPrec > 15:
+          iPrec = 15;
+        fi;
+      elsif fType = fmtF:
+        if iPrec > 18:
+          iPrec = 2;
+        fi;
+      elsif fType = fmtN:
+        if iPrec > 18:
+          iPrec=2;
+        fi;
+      fi;
+    else
+      if fType = fmtE:
+        iPrec = 15;
+      elsif fType = fmtG:
+        iPrec = 15;
+      elsif fType = fmtF:
+        iPrec = 2;
+      elsif fType = fmtN:
+        iPrec = 2;
+      fi;
+    fi;
+    Result = iPrec;
+  end;
+
+  --@doc удалить повторяющиеся символы справа по образцу
+  func RemLastChar(sCh: String; sStr: String): String;
+    var ipos: Integer;
+    ipos = Length(sStr);
+    while Substr(sStr, ipos, 1) = sCh do
+      ipos = ipos - 1;
+    od;
+    if ipos < length(sStr):
+      sStr = substr(sStr, 1, ipos);
+    fi;
+    Result = sStr;
+  end;
+
+  --@doc подстановка типа E
+  func  tostrEType(npar: Numeric; iPrec: Integer; lPrec: Logical): String;
+    var iExp, iDeg: Integer;
+    var sPar: String;
+    var nparabs: Numeric;
+    iPrec = GetPrecByDef(iPrec, lPrec, fType);
+    if npar <> 0:
+      iExp = GetExponent(abs(npar));
+      nparabs = round(abs(npar), iPrec - iExp - 1);
+      for ideg = iExp + 1 .. (iExp -iPrec +2) step - 1 do
+        sPar = sPar + Substr(tostr(GetDecDegree(nparabs, ideg)), 1, 1);
+      od;
+      if fType = fmtG:
+        Result = if(nPar < 0, "-", "") +
+                 RemLastChar("0", Insert(".", sPar, 2)) +
+                 "E" + Str(iExp, "0;-0;0");
+      else -- fType=fmtE :
+        Result = if(nPar < 0, "-", "") +
+                 Insert(".", sPar, 2) + "E" + str(iExp, "+000;-000;+000");
+      fi;
+    else
+      if fType = fmtG:
+        result = "0";
+      else
+        result = "0.0" + Repstr("0", Int(Deb(iPrec - 2))) + "E+000";
+      fi;
+    fi;
+  end;
+
+  --@doc получить параметр формата валюты в Windows
+  func GetCurrencyPari(iCurrencyPar: Integer): Integer;
+    var ipos: Integer;
+    var sVal: String;
+    ipos = СИС2.WinAPI.GetLocaleInfo(СИС2.WinAPI.LOCALE_USER_DEFAULT,
+                                     iCurrencyPar, sVal, 0);
+    if ipos > 0:
+      sVal = Repstr(" ", ipos);
+      ipos = СИС2.WinAPI.GetLocaleInfo(СИС2.WinAPI.LOCALE_USER_DEFAULT,
+                                       iCurrencyPar, sVal, ipos);
+      if ipos > 0:
+        Result = int(substr(sVal, 1, ipos - 1));
+      else
+        SetError(ErrorBase, "Ошибка при записи числа в денежном формате", ErrorPrompt, itError);
+      fi;
+    else
+      SetError(ErrorBase,"Ошибка при записи числа в денежном формате",ErrorPrompt,itError);
+    fi;
+  end;
+
+  --@doc получить параметр формата валюты в Windows
+  func GetCurrencyParS(iCurrencyPar: Integer): String;
+    var ipos: Integer;
+    var sVal: String;
+    ipos = СИС2.WinAPI.GetLocaleInfo(СИС2.WinAPI.LOCALE_USER_DEFAULT,
+                                     iCurrencyPar, sVal, 0);
+    if ipos > 0:
+      sVal = Repstr(" ", ipos);
+      ipos = СИС2.WinAPI.GetLocaleInfo(СИС2.WinAPI.LOCALE_USER_DEFAULT,
+                                       iCurrencyPar, sVal, ipos);
+      if ipos > 0:
+        Result = Substr(sVal, 1, ipos - 1);
+      else
+        SetError(ErrorBase, "Ошибка при записи числа в денежном формате", ErrorPrompt, itError);
+      fi;
+    else
+      SetError(ErrorBase, "Ошибка при записи числа в денежном формате", ErrorPrompt, itError);
+    fi;
+  end;
+
+
+  --@doc подстановка типа M (денежный формат)
+  func toStrMType(npar:numeric; iPrec:integer; lPrec:Logical): String;
+
+    var spar, sVal, sCurrencyFmt, sErrorMsg: String;
+    var ipos, iErrorCode: Integer;
+
+    var iNumDigits: Integer;     -- кол знаков в дробной части
+    var iLeadingZero: Integer;   -- наличие/отсутствие лидирующего нуля в целой части
+    var sGrouping: String;       -- формат группировки разрядов слева от десятичной точки
+    var iNegativeOrder: Integer; -- формат отрицательного числа
+    var iPositiveOrder: Integer; -- формат положительного числа
+    var sDecimalSep: String;     -- символ-разделитель целой и дробной части
+    var sThousandSep: String;    -- разделитель групп разрядов в целой части
+    var sCurrencySymbol: String; -- знак валюты
+
+    --@doc заполнение структуры денежного формата
+    -- заполняет структуру денежного формата
+    -- структура денежного формата
+    --typedef struct _currencyfmtW {
+    --  UINT   NumDigits;
+    --  UINT   LeadingZero;
+    --  UINT   Grouping;
+    --  LPWSTR lpDecimalSep;
+    --  LPWSTR lpThousandSep;
+    --  UINT   NegativeOrder;
+    --  UINT   PositiveOrder;
+    --  LPWSTR lpCurrencySymbol;
+    --} CURRENCYFMTW, *LPCURRENCYFMTW;
+    func getCurrencyFmt:string;
+      var iGrouping: Integer; -- формат группировки разрядов слева от десятичной точки
+      var lpResult: Integer;  -- указатель на структуру CurrencyFmt
+      --@doc преобразование шаблона группировки целых разрядов из строки в целое
+      func ToIGrouping(sGroup: String): Integer;
+        var iter: Integer;
+        var sPos, sBuf: String;
+        for iter = 1.. Length(sGroup) do
+          sPos = Substr(sGroup, iter, 1);
+          if sPos <> ";":
+            sBuf = sBuf + sPos;
+          fi;
+        od;
+        if sBuf <> "0":
+          if Length(sBuf) > 0:
+            if Substr(sBuf, length(sBuf), 1) = "0":
+              sBuf = Substr(sBuf, 1, Length(sBuf) - 1);
+            else
+              sBuf = sBuf + "0";
+            fi;
+          fi;
+        fi;
+        Result = Int(sBuf);
+      end;
+      #if Unicode then
+        Result = repstr(" ", 16);
+      #else
+        Result = repstr(" ", 32);
+      #end
+      iGrouping = ToIGrouping(sGrouping);
+      lpResult = VarAddr(Result);
+      WriteMemory(lpResult, iNumDigits, 4);
+      WriteMemory(lpResult + 4, iLeadingZero, 4);
+      WriteMemory(lpResult + 8, iGrouping, 4);
+      WriteMemory(lpResult + 12, VarAddr(sDecimalSep), 4);
+      WriteMemory(lpResult + 16, VarAddr(sThousandSep), 4);
+      WriteMemory(lpResult + 20, iNegativeOrder, 4);
+      WriteMemory(lpResult + 24, iPositiveOrder, 4);
+      WriteMemory(lpResult + 28, VarAddr(sCurrencySymbol), 4);
+    end;
+
+    if lPrec:
+      iNumDigits = iPrec;
+    else
+      iNumDigits = GetCurrencyParI(СИС2.WinAPI.LOCALE_ICURRDIGITS);
+      iPrec = iNumDigits;
+    fi;
+    iLeadingZero = GetCurrencyParI(СИС2.WinAPI.LOCALE_ILZERO);
+    sGrouping    = GetCurrencyParS(СИС2.WinAPI.LOCALE_SGROUPING);
+    sGrouping    = "3;0";
+    sDecimalSep  = GetCurrencyParS(СИС2.WinAPI.LOCALE_SDECIMAL);
+    sDecimalSep  = ".";
+    sThousandSep = GetCurrencyParS(СИС2.WinAPI.LOCALE_STHOUSAND);
+    sThousandSep = "'";
+    iNegativeOrder = GetCurrencyParI(СИС2.WinAPI.LOCALE_INEGCURR);
+    iPositiveOrder = GetCurrencyParI(СИС2.WinAPI.LOCALE_ICURRENCY);
+    sCurrencySymbol = GetCurrencyParS(СИС2.WinAPI.LOCALE_SCURRENCY);
+    sCurrencyFmt = getCurrencyFmt;
+    spar = Str(nPar, "#." + repstr("0", iPrec) +
+                     ";-#." + Repstr("0", iPrec) +
+                     ";0." + Repstr("0", iPrec));
+    ipos = СИС2.WinAPI.GetCurrencyFormat(СИС2.WinAPI.LOCALE_USER_DEFAULT, 0, spar, sCurrencyFmt, sVal, 0);
+    if ipos > 0:
+      sVal = Repstr(" ", ipos);
+      ipos =СИС2.WinAPI.GetCurrencyFormat(СИС2.WinAPI.LOCALE_SYSTEM_DEFAULT, 0, spar, sCurrencyFmt, sVal, ipos);
+      if ipos > 0:
+        Result = Substr(sVal, 1, ipos - 1);
+      else
+        iErrorCode = СИС2.WinAPI.GetLastError;
+        if iErrorCode = СИС2.WinAPI.ERROR_INSUFFICIENT_BUFFER:
+          sErrorMsg = "ERROR_INSUFFICIENT_BUFFER";
+        elsif iErrorCode=СИС2.WinAPI.ERROR_INVALID_FLAGS:
+          sErrorMsg = "ERROR_INVALID_FLAGS";
+        elsif iErrorCode=СИС2.WinAPI.ERROR_INVALID_PARAMETER:
+          sErrorMsg = "ERROR_INVALID_PARAMETER";
+        else
+          sErrorMsg = "ERROR_UNDEFINED";
+        fi;
+      fi;
+    else
+      sErrorMsg = "ERROR_UNDEFINED";
+    fi;
+    if sErrorMsg <> nil :
+      SetError(ErrorBase, "Ошибка при записи числа в денежном формате: "+sErrorMsg, ErrorPrompt, itError);
+    fi;
+  end;
+
+  --@doc получить подстановку по шаблону
+  func GetSubstitution(fType: fmType; vPar: Variant; iWidth, iPrec: Integer; lJustify, lPrec: Logical): String;
+    if fType = fmtS: -- строковая подстановка
+      if vPar is String:
+        if iprec > 0 and iPrec < length(vPar):
+          vPar = Substr(vPar, 1, iPrec);
+        fi;
+      else
+        SetError(ErrorBase, "Ошибка в строке формата", ErrorPrompt, itError);
+      fi;
+      Result = vPar;
+    elsif fType = fmtD: -- целочисленная подстановка
+      if vPar is Integer :
+        if iprec > 0:
+          vPar = Str(vPar, Repstr("0", iPrec));
+        else
+          vPar = Str(vPar, "0");
+        fi;
+      else
+        SetError(ErrorBase, "Ошибка в строке формата", ErrorPrompt, itError);
+      fi;
+    elsif fType = fmtX: -- целочисленная hex подстановка
+      if vPar is Integer :
+        if iprec > 0:
+          vPar = Str(vPar, Repstr("$;$;0", iPrec));
+        else
+          vPar = Str(vPar, "$");
+        fi;
+        if Length(vPar) < iPrec:
+          vPar = Repstr("0", iPrec - Length(vPar)) + vPar;
+        fi;
+      else
+        SetError(ErrorBase, "Ошибка в строке формата", ErrorPrompt, itError);
+      fi;
+    elsif fType = fmtF: -- вещественное с фиксированной точкой
+      if vPar is Numeric :
+        iPrec = GetPrecByDef(iPrec, lPrec, fType);
+        vPar = Str(vPar, "#0." + Repstr("0", iPrec) +
+                         ";-#0." + Repstr("0", iPrec) +
+                         ";0." + Repstr("0", iPrec));
+      else
+        SetError(ErrorBase, "Ошибка в строке формата", ErrorPrompt, itError);
+      fi;
+    elsif fType = fmtN: -- вещественное с фиксированной точкой и разделителями триад
+      if vPar is Numeric:
+        iPrec=GetPrecByDef(iPrec,lPrec,fType);
+        vPar = str(vPar,",#0."+repstr("0",iPrec)+";-,#0."+repstr("0",iPrec)+";0."+repstr("0",iPrec));
+      --   vPar = Str(vPar, "#." + Repstr("0", iPrec) + ";-,#." + Repstr("0", iPrec) + ";0." + Repstr("0", iPrec));
+      --   ipos = pos(".", vPar);
+      --   if ipos > 0:
+      --     vPar = PutSepBy("'", Substr(vPar, 1, ipos-1), 3) + "." + Substr(vPar, ipos + 1, Length(vPar) - ipos);
+      --   else
+      --     vPar = PutSepBy("'", vPar, 3);
+      --   fi;
+      else
+        SetError(ErrorBase, "Ошибка в строке формата", ErrorPrompt, itError);
+      fi;
+    elsif fType = fmtE: -- вещественное в экспоненциальном формате
+      if vPar is Numeric:
+        vpar = tostrEType(vpar, iPrec, lPrec);
+      else
+        SetError(ErrorBase, "Ошибка в строке формата", ErrorPrompt, itError);
+      fi;
+    elsif fType = fmtG: -- вещественное в комбинированном формате
+                        -- разделитель триад в 6.9 не используется, хотя заявлен в хелпе
+                        -- для использования разделителя установить  lThousandSepG = True
+      if vPar is Numeric:
+        iPrec = GetPrecByDef(iPrec, lPrec, fType);
+        if vPar >= 0.00001 and GetExponent(vPar) < iPrec:
+          iPrec = iPrec - GetExponent(vPar) - 1;
+          if lThousandSepG:
+            vPar = str(vPar, ",0#." + Repstr("0", iPrec) +
+                             ";-,0#." + Repstr("0", iPrec) +
+                             ";0." + Repstr("0", iPrec));
+          else
+            vPar = str(vPar, "0#." + Repstr("0", iPrec) +
+                             ";-0#." + Repstr("0", iPrec) +
+                             ";0." + Repstr("0", iPrec));
+          fi;
+          vPar = RemLastChar("0", vPar);
+        else
+          vPar = tostrEType(vpar, iPrec, lPrec);
+        fi;
+      else
+        SetError(ErrorBase, "Ошибка в строке формата", ErrorPrompt, itError);
+      fi;
+    elsif fType = fmtM: -- вещественное число в денежном формате
+      if vPar is Numeric :
+        vPar = tostrMType(vpar, iPrec, lPrec);
+      fi;
+    fi;
+
+    if iWidth > Length(vPar):
+      if lJustify :
+        vPar = vPar + Repstr(" ", iWidth - Length(vPar));
+      else
+        vPar = Repstr(" ", iWidth - Length(vPar)) + vPar;
+      fi;
+    fi;
+    Result = vPar;
+  end;
+
+  aPar = [vPar0, vPar1, vPar2,vPar3, vPar4, vPar5, vPar6, vPar7, vPar8, vPar9];
+  iParQuantyti = GetParQuantyti;
+
+  ipos = pos("%", sbuf);
+  while ipos>0 do
+    locresult = locresult + substr(sbuf, 1, ipos - 1);
+    sbuf = substr(sbuf, ipos + 1, length(sbuf) - ipos);
+    ispecpos = charpos(sFormatTypes, sbuf);
+    if ispecpos = 0 then
+      SetError(ErrorBase, "Ошибка в строке формата", ErrorPrompt, itError);
+      --elsif iParCnt > 10:
+      --  SetError(ErrorBase,"Ошибка в строке формата: больше 10 подстновок",ErrorPrompt,itError);
+    else
+      fType = fmType(Pos(Lo(sbuf[ispecpos]), sFormatTypes));
+      sSpec = Substr(sbuf, 1, ispecpos-1);
+      sbuf  = Substr(sbuf, ispecpos + 1, Length(sbuf) - ispecpos);
+      iIndex = Pos(":", sSpec);
+      if iIndex > 0:
+        if iIndex > 1:
+          vIndex = Substr(sSpec, 1, iIndex - 1);
+        else
+          SetError(ErrorBase, "Ошибка в строке формата", ErrorPrompt, itError);
+        fi;
+      else
+        vIndex = "";
+      fi;
+      lJustify = sSpec[iIndex + 1] = "-";
+      iWidth = iIndex + 1 + If(lJustify, 1, 0);
+      iPrec = Pos(".", sSpec, iWidth);
+      lPrec = iPrec > 0;
+      if iPrec > 0:
+        vPrec = Substr(sSpec, iPrec + 1, Length(sSpec) - iPrec);
+        vWidth = Substr(sSpec, iWidth, iPrec - iWidth);
+      else
+        vPrec = "";
+        vWidth = Substr(sSpec, iWidth, Length(sSpec) - iWidth +1);
+      fi;
+      if vIndex = "*":
+        setparcnt(iParCnt + 1);
+        if aPar[iParCnt] Is Integer :
+          if aPar[iParCnt] >= 0 and  aPar[iParCnt] <= 9:
+            vPar = apar[aPar[iParCnt] + 1];
+          else
+            SetError(ErrorBase, "Ошибка в строке формата", ErrorPrompt, itError);
+          fi;
+        else
+          SetError(ErrorBase, "Ошибка в строке формата", ErrorPrompt, itError);
+        fi;
+      fi;
+      if vWidth = "*":
+        setparcnt(iParCnt + 1);
+        if aPar[iParCnt] is Integer:
+          iWidth = aPar[iParCnt];
+        else
+          SetError(ErrorBase, "Ошибка в строке формата", ErrorPrompt, itError);
+        fi;
+      elsif vWidth <> "":
+        try
+         iWidth = Int(vWidth);
+        except
+         iWidth = 0;
+        end;
+      else
+        iWidth = 0;
+      fi;
+      if vPrec = "*":
+        setparcnt(iParCnt + 1);
+        if aPar[iParCnt] is Integer:
+          iPrec = aPar[iParCnt];
+        else
+          SetError(ErrorBase, "Ошибка в строке формата", ErrorPrompt, itError);
+        fi;
+      elsif vPrec <> "":
+        try
+          iPrec = Int(vPrec);
+        except
+          iPrec = 0;
+        end;
+      else
+        iPrec = 0;
+      fi;
+      if isdigit(vIndex):
+        vPar = apar[Int(vIndex) + 1];
+      elsif vIndex = "":
+        setparcnt(iParCnt + 1);
+        vPar = apar[iParCnt];
+      else
+        SetError(ErrorBase, "Ошибка в строке формата", ErrorPrompt, itError);
+      fi;
+      locresult = locresult + GetSubstitution(fType, vPar, iWidth, iPrec, lJustify, lPrec);
+      ipos = Pos("%", sbuf);
+    fi;
+  od;
+  locResult = locResult + sbuf;
+  Result = locResult;
+end;
+
+inobject
+
+end

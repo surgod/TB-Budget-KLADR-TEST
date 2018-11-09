@@ -1,0 +1,247 @@
+class "Класс для доступа DBF файлов";
+
+inclass private
+
+type DBFCodePage = (NONE=0,OEM, ANSI, INVALID);
+
+type DBFFieldType = (C=1, D, L, N, M);
+
+--const sDBFFieldType: String[] = ["C", "D", "L", "N", "M"];
+
+func sDBFFieldType(lDBFFieldType: DBFFieldType): String;
+ Result = if (lDBFFieldType=C,"C",if(lDBFFieldType=D,"D",if(lDBFFieldType=L,"L",if(lDBFFieldType=N,"N",if(lDBFFieldType=M,"M","")))));
+end;
+
+
+-- C Строка, выровненная влево пробелами
+-- D Дата, хранимая в виде строки из 8 цифр в формате ГГГГММДД. Пустое значение - 10 пробелов
+-- L Булево значение, длина всегда 1. 'T', 't', 'Y', 'y' - истина, 'F', 'f', 'N', 'n' - ложь, пробел или '?' - пустое значение
+-- N Число, хранимое в виде строки заданной длины с заданным количеством цифр после точки, выровненной вправо пробелами. Пустое значение задается строкой пробелов
+-- M Номер блока в MEMO-файле, хранимый в виде строки до 10 цифр, выровненной вправо пробелами. Длина поля всегда 10. Пустое значение - 10 пробелов, означает отсутствие блока в MEMO-файле
+
+--DBF.Open
+--DBF.Signature
+--DBF.IsdBASE7
+--DBF.LastUpdated
+--DBF.Amount
+--DBF.SetAmount
+--DBF.FieldAmount
+--DBF.GetFD
+--DBF.ConvFD
+--DBF.ConvTYPENAME
+--DBF.Seek
+--DBF.Deleted
+--DBF.SetDeleted
+--DBF.GetField
+--DBF.SetField
+--DBF.Update
+--DBF.Close
+
+const cSignDBF: Integer = 3;       -- сигнатура файла типа dBaseIII+
+const cSignDBFM: Integer = 131;    -- сигнатура файла типа dBaseIII+ c мемо полями
+const cHeaderLen: Integer = 32;    -- длина оглавления файла типа dBaseIII+
+const cFirstYear: Integer = 1900;   -- год, которому соответствует 00
+const cYYPos: Integer = 2;         -- позиция года модификации в оглавлении
+const cMMPos: Integer = 3;         -- позиция месяца модификации в оглавлении
+const cDDPos: Integer = 4;         -- позиция дня модификации в оглавлении
+const cRecordsPos: Integer = 5;    -- позиция поля "количество записей в файле"
+const cHeaderLenPos: Integer = 9;  -- позиция поля "длина оглавления с дескрипторами полей"
+const cRecordLenPos: Integer = 11; -- позиция поля "длина записи"
+const cCPPos: Integer = 30;        -- позиция поля "Идентификатор кодовой страницы"
+const cFieldDesPos: Integer = 33;  -- позиция начала дескрипторов полей
+const cFieldDesLen: Integer = 32;  -- длина дескриптора поля
+
+const CFieldNamePos: Integer = 1;  -- позиция поля "Имя поля" в дескрипторе
+const CFieldNameLen: Integer = 11; -- длина поля "Имя поля" в дескрипторе
+
+const CFieldTypePos: Integer = 12; -- позиция поля "Тип поля" в дескрипторе
+const CFieldLenPos: Integer = 17;  -- позиция поля "Полная длина поля" в дескрипторе
+const CFieldPrecPos: Integer = 18; -- позиция поля "Число десятичных разрядов (старший байт длины строкового)" в дескрипторе
+
+const cActualRec: Integer = 32;    -- заголовочный байт актуальной записи
+const cDeletedRec: Integer = 42;   -- заголовочный байт удаленной записи
+
+const cCPOEM866: Integer = 38;     -- признак кодовой страницы OEM 866
+const cCPANSI1251: Integer = 201;  -- признак кодовой страницы ANSI 1251
+
+
+inclass public
+
+func Create: UserObject;
+  result = inherited Create;
+end;
+
+inobject private
+
+FileName: String; -- имя файла
+DBF     : TextFile; -- DBF файл как объект TextFile
+Signature: Integer; -- сигнатура dbf файла
+LastUpdate: Date;  -- дата модификации DBF
+Records : Integer; -- количество записей
+RecordLen  : Integer; -- длина записи
+HeaderLen  : Integer; -- длина заголовка
+iYY     : Integer; -- ГГ -- 00 - 1900 год
+iMM     : integer; -- ММ
+iDD     : Integer; -- ДД
+CPId    : Integer; -- Идентификатор кодовой страницы
+
+Opened: Logical;    -- признак открытия DBF файла для чтения
+CodePage: DBFCodePage:=NONE; -- тип кодировки
+IsdBaseIIIP : Logical;
+--ValidCodePage: Logical;
+
+FieldsCount: Integer; -- количество полей
+Fields[]: Storage;    -- поля
+                      -- Fields[Index].Name -- имя
+                      -- Fields[Index].Type -- тип
+                      -- Fields[Index].Len  -- длина
+                      -- Fields[Index].Pos  -- позиция
+
+-- CurrentRecord: Integer;
+
+inobject public
+
+ErrorMsg: String;
+CurRecord: String;
+
+func CurrentRecord: Integer;
+ if not opened then
+  result=-1;
+ elsif records=0 :
+  result=0;
+ else
+  result=int((dbf.position-headerlen-1)/RecordLen)+1;
+  if not сис2.математика.nearzero(int((dbf.position-headerlen-1)/RecordLen)-(dbf.position-headerlen-1)/RecordLen) then
+   result=nil;
+  end;
+ end;
+end;
+
+proc GoTo(iTo:integer);
+ if opened then
+  if iTo>0 and iTo<Records then
+   dbf.seek(HeaderLen+RecordLen*(iTo-1)+1,0);
+  end;
+ end;
+end;
+
+func ReadNext:Logical;
+  Result = not DBF.EOF;
+end;
+
+func Open(sFileName: String):Logical;
+var sHeader, sBuf, sFieldDesc : String;
+var iHeaderPos, iRecPos: integer;
+Close;
+if existfile(sFileName) then
+ dbf=textfile.Create(sFileName,fmOpenRead,textfile.Ansi);
+ sHeader=dbf.read(cHeaderLen);
+ Signature=ord(sHeader);
+ if  Signature = cSignDBF or Signature = cSignDBFM then
+  FileName=sFileName;
+  Signature=ord(sBuf);
+  CPId=ord(substr(sHeader,cCPPos,1));
+  if CPId=cCPOEM866 then
+    CodePage=OEM;
+  elsif CPId=cCPANSI1251 then
+    CodePage=ANSI;
+  else
+    CodePage=INVALID;
+  end;
+  if CodePage = OEM then
+   dbf = nil;
+   dbf = textfile.Create(sFileName,fmOpenRead,textfile.OEM);
+   sHeader = dbf.read(cHeaderLen);
+  end;
+  if CodePage=OEM or CodePage=ANSI then
+    iYY=ord(substr(sHeader,cYYPos,1));
+    iMM=ord(substr(sHeader,cMMPos,1));
+    iDD=ord(substr(sHeader,cDDPos,1));
+    LastUpdate=dat(iDD,iMM,cFirstYear+iYY);
+    Records=int(
+            ord(substr(sHeader,cRecordsPos,1))*power(2,24)+
+            ord(substr(sHeader,cRecordsPos+1,1))*power(2,16)+
+            ord(substr(sHeader,cRecordsPos+2,1))*power(2,8)+
+            ord(substr(sHeader,cRecordsPos+3,1)));
+    HeaderLen=int(
+            ord(substr(sHeader,cHeaderLenPos,1))*power(2,8)+
+            ord(substr(sHeader,cHeaderLenPos+1,1)));
+    RecordLen=int(
+            ord(substr(sHeader,cRecordLenPos,1))*power(2,8)+
+            ord(substr(sHeader,cRecordLenPos+1,1)));
+    --FieldsCount=(HeaderLen-cHeaderLen)/cFieldDesLen
+    -- чтение дескрипторов полей
+    iHeaderPos=cHeaderLen;
+    iRecPos=1;
+    while iHeaderPos<HeaderLen do
+     if dbf.size<dbf.position+cFieldDesLen then
+      ErrorMsg = "Нарушен формат файла "+sFileName+"!";
+      break;
+     end;
+     sFieldDesc=dbf.read(cFieldDesLen);
+     FieldsCount=FieldsCount+1;
+     Fields[FieldsCount]=storage.create;
+     Fields[FieldsCount].Name=substr(sFieldDesc,CFieldNamePos,CFieldNameLen);
+     Fields[FieldsCount].Type=substr(sFieldDesc,CFieldTypePos,1);
+     Fields[FieldsCount].Prec=0;
+     if Fields[FieldsCount].Type=sDBFFieldType(C) then
+      Fields[FieldsCount].Len=ord(substr(sFieldDesc,CFieldLenPos,1))+
+                              ord(substr(sFieldDesc,CFieldPrecPos,1))*power(2,8);
+     else
+      Fields[FieldsCount].Len=ord(substr(sFieldDesc,CFieldLenPos,1));
+     end;
+     if Fields[FieldsCount].Type=sDBFFieldType(N) then
+      Fields[FieldsCount].Prec=ord(substr(sFieldDesc,CFieldPrecPos,1));
+     fi;
+     Fields[FieldsCount].Pos=iRecPos;
+     iRecPos=iRecPos+Fields[FieldsCount].Len;
+     iHeaderPos=iHeaderPos+cFieldDesLen;
+    end;
+    result = ErrorMsg="";
+    Opened = result;
+  else
+   ErrorMsg = "Кодовая страница (код - "+str(CPId,"$$")+") , используемая в файле "+sFileName+" не обрабатывается!";
+  end;
+ else
+  ErrorMsg = "Тип DBF файла с сигнатурой "+str(Signature,"$$")+" не поддерживается!";
+ fi;
+else
+ ErrorMsg = "Не найден файл "+sFileName + "!";
+fi;
+end;
+
+-- @doc
+-- закрыть dbf файл
+proc Close;
+  var iter: Integer;
+  DBF=nil;
+  FileName="";
+  Signature=0;
+  LastUpdate=nil;
+  Records=0;
+  RecordLen=0;
+  HeaderLen=0;
+  iYY=0;
+  iMM=0;
+  iDD=0;
+  CPId=0;
+  Opened=false;
+  CodePage=NONE; -- тип кодировки
+  IsdBaseIIIP=false;
+  for iter = 1..FieldsCount do
+  Fields[iter]=nil;
+  end;
+  FieldsCount=0;
+  ErrorMsg="";
+end;
+
+proc OnDestroy;
+ var iter: Integer;
+ DBF=nil;
+ for iter = 1..FieldsCount do
+  Fields[iter]=nil;
+ end;
+ inherited OnDestroy;
+end;
+
+end

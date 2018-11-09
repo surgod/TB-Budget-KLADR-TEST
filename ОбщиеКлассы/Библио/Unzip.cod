@@ -1,0 +1,76 @@
+class "Распаковка файла";
+
+inclass private
+
+const ErrorBase : integer = 2000; -- база кодов ошибок класса
+const ErrorPrompt : string = "Ошибка распаковки zip архива:";
+
+-- константы операций копирования в Shell.Application
+Const FOF_NODIALOG: integer = 4;         -- Не показывать окно с прогресс-баром.
+Const FOF_RENAMEIFEXISTS: integer = 8;   -- Дать копируемому файлу новое имя, если файл с таким именем уже существует.
+Const FOF_CONFIRMALL: integer = 16;      -- Отвечать автоматически "Yes to All" в любом отображаемом диалоге.
+Const FOF_PRESERVEUNDO: integer = 64;    -- Подготовить данные для отката операции, если возможно
+Const FOF_WILDCARDSONLY: integer = 128;  -- Выполнять только для групповых операций *.*
+Const FOF_SIMPLEPROGRESS: integer = 256; -- Отображать окно с прогресс-баром, но не показывать имена файлов.
+Const FOF_CREATEDIR: integer = 512;      -- Не запрашивать подтверждение для создания папки
+Const FOF_NOERRORDISPLAY: integer = 1024;-- Не показывать диалоговые окна, если произошла ошибка
+Const FOF_NOSECURITYCOPY: integer = 2048;-- Не копировать аттрибуты безопасности
+Const FOF_NOSUBDIRECTORIES: integer = 4096; --Выполнять только в локальной папке. Не выполнять в подкаталогах.
+Const FOF_NOCONNECTEDFILES: integer = 8192; -- Не копировать связанные файлы (например, html-файлы с их папками) как группу. Копировать только указанные файлы.
+
+inclass public
+
+func create : UserObject ;
+  Result = inherited create;
+end;
+
+inobject
+ZipFileName:string;
+DestFolder:string;
+DestFileName:string;
+
+proc SetField(FieldName:String; Value:Variant);
+inherited SetField(FieldName,Value);
+if FieldName="ZipFileName" :
+  if not existfile(Value) :
+   SetError(ErrorBase, "Не найден файл '"+Value+"'",ErrorPrompt,itWarning);
+  fi;
+elsif FieldName="DestFolder" :
+  if not existFolder(Value) :
+   createfolder(Value);
+  fi;
+  if not existFolder(Value) :
+   SetError(ErrorBase, "Не найдена папка '"+Value+"'",ErrorPrompt,itWarning);
+  fi;
+fi;
+end;
+
+proc unzip;
+var oshell, oFSO, oZipFolder, oDestFolder, oZipFile : autoobject;
+oshell=AutoObject.Create("Shell.Application");
+oFSO=AutoObject.Create("Scripting.FileSystemObject");
+--oZipFolder = oshell.NameSpace(ZipFileName);
+--oDestFolder = oShell.NameSpace(DestFolder);
+oZipFolder = oshell.NameSpace(oFSO.GetAbsolutePathName(ZipFileName));
+oDestFolder = oShell.NameSpace(oFSO.GetAbsolutePathName(DestFolder));
+oZipFile = oZipFolder.ParseName(DestFileName);
+if oZipFile = nil :
+ setError(ErrorBase,"Файл '"+DestFileName+"' не найден в архивном файле '"+ZipFileName+"'",ErrorPrompt);
+else
+-- oDestFolder.CopyHere(oZipFile, FOF_CONFIRMALL+
+--                                FOF_SIMPLEPROGRESS+
+--                                FOF_CREATEDIR+
+--                                FOF_NOERRORDISPLAY+
+--                                FOF_NOSECURITYCOPY+
+--                                FOF_NOSUBDIRECTORIES+
+--                                FOF_NOCONNECTEDFILES);
+ oDestFolder.CopyHere(oZipFile, FOF_CONFIRMALL);
+fi;
+end;
+
+proc OnDestroy;
+inherited OnDestroy;
+end;
+
+
+end
