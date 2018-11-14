@@ -1,0 +1,94 @@
+class "переменные среды ОС";
+  -- класс для обращения с переменным среды выполнения операционной системы
+inclass public
+
+  func create : UserObject ;
+    Result = inherited create;
+  end;
+
+
+  type tEnvType =
+  ( EnvType_System = 1, EnvType_User, EnvType_Volatile, EnvType_Process);
+
+  aEnvTypeCode: string[] = ["System", "User", "Volatile", "Process"];
+  aEnvTypeName: string[] = ["Системные переменные окружения",
+                            "Пользовательские переменные окружения",
+                            "Временные переменные окружения",
+                            "Переменные окружения текущего командного окна"];
+
+inobject public
+   Name: String; -- имя пременной
+   Value: String; -- значение переменой
+   EnvType: tEnvType; -- тип переменной
+
+--   ExpandEnvironmentStrings
+ proc setfield(FieldName: String; FieldValue: variant);
+   inherited setfield(FieldName, FieldValue);
+   if    lo(FieldName) = lo("name"):
+     -- получить значение для Value
+     Name = FieldValue;
+     Value = GetEnvVar(getfield(FieldName));
+   elsif lo(FieldName) = lo("value"):
+     -- установить переменную среды Name = Value;
+     Value = FieldValue;
+     SetEnvVar(Name, Value);
+   elsif lo(FieldName) = lo("envtype"):
+     EnvType = FieldValue;
+     if EnvType <> nil:
+       if  oWshShell = nil:
+         oWshShell = autoobject.OpenOrCreate("WScript.Shell", true);
+       fi;
+       --oEnvironment = oWshShell.Environment(GetEnvTypeCode(EnvType));
+       --oEnvironment = oWshShell.invoke("Environment",up(GetEnvTypeCode(EnvType)));
+       oEnvironment = oWshShell.Environment;
+     else
+       oEnvironment =  nil;
+     fi;
+   fi;
+ end;
+
+
+inobject private
+  oEnvVars: Storage;
+  oWshShell: AutoObject;
+  oEnvironment: AutoObject;
+
+  func GetEnvTypeCode(locEnvType: tEnvType): String ;
+    Result = aEnvTypeCode[locEnvType];
+  end;
+
+  func GetEnvTypeName(locEnvType: tEnvType): String ;
+    Result = aEnvTypeName[locEnvType];
+  end;
+
+  func GetEnvVar(EnvVarName: String): String;
+    if  oWshShell = nil:
+      oWshShell = autoobject.OpenOrCreate("WScript.Shell", true);
+      if EnvType <> nil:
+        --oEnvironment = oWshShell.Environment(GetEnvTypeCode(EnvType));
+        --oEnvironment = oWshShell.invoke("Environment",up(GetEnvTypeCode(EnvType)));
+        oEnvironment = oWshShell.Environment;
+      fi;
+    fi;
+    if oEnvironment <> nil :
+      Result = oEnvironment.Item(EnvVarName);
+      --Result = oEnvironment.invoke("Item",EnvVarName);
+    fi;
+  end;
+
+proc SetEnvVar(envVarName:String; EnvVarValue: String);
+    if  oWshShell = nil:
+      oWshShell = autoobject.OpenOrCreate("WScript.Shell", true);
+      if EnvType <> nil:
+        --oEnvironment = oWshShell.Environment(GetEnvTypeCode(EnvType));
+        --oEnvironment = oWshShell.invoke("Environment",up(GetEnvTypeCode(EnvType)));
+        oEnvironment = oWshShell.Environment;
+      fi;
+    fi;
+    if oEnvironment <> nil :
+      --oEnvironment.Item(EnvVarName, EnvVarValue);
+      oEnvironment.invoke("Item",EnvVarName, EnvVarValue);
+    fi;
+end;
+
+end

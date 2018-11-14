@@ -1,6 +1,6 @@
 class "Тестирование проекта КЛАДР";
 import СИС2 classes файл;
-import classes Библио.ТБ69;
+import classes Библио.ТБ69, Библио.Environmentvariable;
 inclass
 
 const sExtPrompt:String="Архив ТВС|*.tbc|Архив ТВD|*.tbd|Архив XML|*.xml|Архив CDF|*.cdf|Архив CRD|*.crd";
@@ -28,6 +28,11 @@ sTypeValue:string[]=["TBC","TBD","XML","CDF","CRD"];
 
 type ftKLADR = (ftKLADR_KLADR=1, ftKLADR_STREET, ftKLADR_SOCRBASE, ftKLADR_ALTNAMES,
                       ftKLADR_DOMA, ftKLADR_FLAT);
+
+EnvVar: Библио.Environmentvariable;
+tEnvType: tEnvType;
+sEnvVarName: string;
+sEnvVarValue: string;
 
 inobject
 
@@ -222,7 +227,48 @@ oBtGetSQLServerName: Button;
     Result = false; -- Продолжаем стандартную обработку
   end;
 
+  proc FieldtEnvTypeOnExit(Cell :TemplateCell; Index :Integer);
+    -- Обработка события выхода из редактируемого поля
+    -- Параметры:
+    --   Cell: клетка шаблона
+    --   Index: номер кадра, в котором находится клетка
+    if EnvVar = nil:
+      EnvVar = Библио.Environmentvariable.Create;
+    fi;
+    EnvVar.Setfield("EnvType", tEnvType);
+    EnvVar.Setfield("Name", sEnvVarName);
+    sEnvVarValue = EnvVar.GetField("Value");
+  end;
+
+  proc FieldsEnvVarNameOnExit(Cell :TemplateCell; Index :Integer);
+    -- Обработка события выхода из редактируемого поля
+    -- Параметры:
+    --   Cell: клетка шаблона
+    --   Index: номер кадра, в котором находится клетка
+    if EnvVar = nil:
+      EnvVar = Библио.Environmentvariable.Create;
+    fi;
+    EnvVar.Setfield("EnvType", tEnvType);
+    EnvVar.Setfield("Name", sEnvVarName);
+    sEnvVarValue = EnvVar.GetField("Value");
+  end;
+
+  proc FieldsEnvVarValueOnExit(Cell :TemplateCell; Index :Integer);
+    -- Обработка события выхода из редактируемого поля
+    -- Параметры:
+    --   Cell: клетка шаблона
+    --   Index: номер кадра, в котором находится клетка
+    if EnvVar = nil:
+      EnvVar = Библио.Environmentvariable.Create;
+    fi;
+    EnvVar.Setfield("EnvType", tEnvType);
+    EnvVar.Setfield("Name", sEnvVarName);
+    EnvVar.Setfield("Value", sEnvVarName);
+    sEnvVarValue = EnvVar.GetField("Value");
+  end;
+
 --}
+
 --{ вспомогательные методы
 --proc   ОткрытьБланк(sBlankClassName: String);
 --  var локКлассБл :Class BlankForm;
@@ -1257,5 +1303,6 @@ if  locRClass<>nil:
  Библио.SQL.openWorkAreaSQL("",sSQL,"sRecClassName_SOCRBASE");
 fi;
 end;
+--}
 
 end
