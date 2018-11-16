@@ -29,7 +29,6 @@ sTypeValue:string[]=["TBC","TBD","XML","CDF","CRD"];
 type ftKLADR = (ftKLADR_KLADR=1, ftKLADR_STREET, ftKLADR_SOCRBASE, ftKLADR_ALTNAMES,
                       ftKLADR_DOMA, ftKLADR_FLAT);
 
-EnvVar: Библио.Environmentvariable;
 tEnvType: tEnvType;
 sEnvVarName: string;
 sEnvVarValue: string;
@@ -85,6 +84,7 @@ oBtTestFormat: Button;
 oBtTestFormatLog: Button;
 oBtTestSQL: Button;
 oBtGetSQLServerName: Button;
+EnvVar: Библио.Environmentvariable;
 --------------------------------------------------------------------------------
 --{ Обработчики событий бланка
 

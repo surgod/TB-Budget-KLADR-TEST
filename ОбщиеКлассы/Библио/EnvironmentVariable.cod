@@ -14,7 +14,7 @@ inclass public
   const wbemFlagReturnImmediately: integer = 16; -- значение по умолчанию для этого параметра. Приводит к немедленному возврату результатов запроса (полусинхронный режим).
   const wbemFlagForwardOnly: integer = 32; -- возвращает коллекцию типа forward-only (навигация только вперёд). Максимальная производительность и экономия памяти.
   const wbemFlagReturnWhenComplete: integer = 0; -- возвращает коллекцию в синхронном режме
-  const lWMI: Logical = true;
+  const lWMI: Logical = false;
   const lWshShell: Logical = not lWMI;
 
   func create : UserObject ;
@@ -62,7 +62,7 @@ inobject public
          fi;
          --oEnvironment = oWshShell.Environment(GetEnvTypeCode(EnvType));
          --oEnvironment = oWshShell.invoke("Environment",up(GetEnvTypeCode(EnvType)));
-         oEnvironment = oWshShell.Environment;
+         oEnvironment = oWshShell.Environment('<'+up(GetEnvTypeCode(EnvType))+'>');
        else
          oEnvironment =  nil;
        fi;
@@ -129,7 +129,7 @@ end;
       if EnvType <> nil:
         --oEnvironment = oWshShell.Environment(GetEnvTypeCode(EnvType));
         --oEnvironment = oWshShell.invoke("Environment",up(GetEnvTypeCode(EnvType)));
-        oEnvironment = oWshShell.Environment;
+        oEnvironment = oWshShell.Environment('<'+up(GetEnvTypeCode(EnvType))+'>');
       fi;
     fi;
     if oEnvironment <> nil :
@@ -144,7 +144,7 @@ end;
         if EnvType <> nil:
           --oEnvironment = oWshShell.Environment(GetEnvTypeCode(EnvType));
           --oEnvironment = oWshShell.invoke("Environment",up(GetEnvTypeCode(EnvType)));
-          oEnvironment = oWshShell.Environment;
+          oEnvironment = oWshShell.Environment('<'+up(GetEnvTypeCode(EnvType))+'>');
         fi;
       fi;
       if oEnvironment <> nil :
@@ -171,7 +171,17 @@ proc WMIInitEnvVars;
   fi;
   count = SWbemObjectSet.count-1;
   for index = 0 .. count do
-    SWbemObject = SWbemObjectSet.ItemIndex(index);
+    --SWbemObject = SWbemObjectSet.ItemIndex(index);
+    SWbemObject = GetSWbemObject(SWbemObjectSet, index);
+
+--colItems.Item("\\.\root\cimv2:Win32_Service.Name=""MDM"""),
+--colItems.Item("\\ServerName\root\cimv2:Win32_Service.Name=""MDM"""),
+--colItems.Item("Win32_Service.Name=""MDM"""),
+--colItems("\\.\root\cimv2:Win32_Service.Name=""MDM"""),
+--colItems("\\ServerName\root\cimv2:Win32_Service.Name=""MDM"""),
+--colItems("Win32_Service.Name=""MDM""
+
+
     svarname = _GetFieldName(string(SWbemObject.name), GetEnvType(string(SWbemObject.username)));
     svarvalue = string(SWbemObject.VariableValue);
     oEnvVars.SetField(svarname, svarvalue);
@@ -199,5 +209,27 @@ func wmiGetEnvVar(EnvVarName: string; EnvType:tEnvType):String;
     fi;
   fi;
 end;
+
+func GetSWbemObject(locSWbemObject: autoObject; locitemindex: integer): autoObject;
+  var oScriptCtrl: AutoObject;
+  var crlf: string;
+  crlf = chr(13) + chr(10);
+  oScriptCtrl=Autoobject.Create("MSScriptControl.ScriptControl");
+  if oScriptCtrl <> nil:
+     oScriptCtrl.Language = "vbscript";
+     oScriptCtrl.AddCode("Function EnumerateCollection(ObjSet,Number)" + crlf +
+                         " Count = 0 " + crlf +
+                         " For Each Obj In ObjSet "+ crlf +
+                         " If Count = Number Then "+ crlf +
+                         " Set EnumerateCollection = Obj "+ crlf +
+                         " Exit Function "+ crlf +
+                         " End If "+ crlf +
+                         " Count = Count + 1 "+ crlf +
+                         "   Next "+ crlf +
+                         " End Function ");
+   return  oScriptCtrl.Run("EnumerateCollection", locSWbemObject, locitemindex);
+  fi;
+end;
+
 
 end
