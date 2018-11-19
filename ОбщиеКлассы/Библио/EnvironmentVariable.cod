@@ -1,12 +1,22 @@
-class "переменные среды ОС";
-  -- класс для обращения с переменным среды выполнения операционной системы
---import ТББ_БАЗОВЫЙ classes WMI.Service;
+class "переменные среды (environment) ОС";
+-- класс для обращения с переменным среды выполнения операционной системы
+-- методы и свойства класса Environmentvariable
+
+--create - создать объект для доступа к environment
+--func getenvvar(envvarname, [envowner])-> string - считать переменную envvarname
+--     принадлежащую envowner, по умолчанию читается из <System>
+--func getEnvVarAllOwners(EnvVarName: String): String[];
+--     взять значения переменной EnvVarName для всех владельцев окружения
+--func getenvvarowners: string[]
+--     получить список всех владельцев сред выполнения
+--proc setenvvar(envvarname, envvarvalue, [envowner])
+--     установить переменную среды, принадлежащую envowner, по умолчанию <System>
+--proc remenvvar(envvarname, [envowner])
+--     удалить переменную среды, принадлежащую envowner, по умолчанию <System>
 
 
 inclass public
 
-  const WMINameSpace: String = "root/CIMV2"; -- пространство имен WMI
-  const WMICurrentServer: String = ".";      -- имя текущего компьютера
   const WMImoniker: String = "winmgmts:\\.\root\cimv2";
   --const WMImoniker: String = "winmgmts://./root/cimv2";
   const WMIEnvClass: String = "winmgmts://./root/cimv2:Win32_Environment";
@@ -14,144 +24,89 @@ inclass public
   const wbemFlagReturnImmediately: integer = 16; -- значение по умолчанию для этого параметра. Приводит к немедленному возврату результатов запроса (полусинхронный режим).
   const wbemFlagForwardOnly: integer = 32; -- возвращает коллекцию типа forward-only (навигация только вперёд). Максимальная производительность и экономия памяти.
   const wbemFlagReturnWhenComplete: integer = 0; -- возвращает коллекцию в синхронном режме
-  const lWMI: Logical = false;
-  const lWshShell: Logical = not lWMI;
+  const wbemEnvSystemOwner: string = "<SYSTEM>"; -- имя системной среды
 
   func create : UserObject ;
     Result = inherited create;
-    if lwmi:
-      Result.WMIInitEnvVars;
-    fi;
+    Result.WMIInitEnvVars;
   end;
-
-  type tEnvType =
-  ( EnvType_System = 1, EnvType_User, EnvType_Volatile, EnvType_Process);
-
-  aEnvTypeCode: string[] = ["System", "User", "Volatile", "Process"];
-  aEnvTypeName: string[] = ["Системные переменные окружения",
-                            "Пользовательские переменные окружения",
-                            "Временные переменные окружения",
-                            "Переменные окружения текущего командного окна"];
 
 inobject public
    Name: String; -- имя пременной
    Value: String; -- значение переменой
-   EnvType: tEnvType:= EnvType_System; -- тип переменной
+   Owner: String; -- владелец среды
 
---   ExpandEnvironmentStrings
  --{ setfield
  proc setfield(FieldName: String; FieldValue: variant);
    inherited setfield(FieldName, FieldValue);
    if    lo(FieldName) = lo("name"):
      -- получить значение для Value
      Name = FieldValue;
-     Value = GetEnvVar(Name, EnvType);
+     Value = GetEnvVar(Name, Owner);
    elsif lo(FieldName) = lo("value"):
      -- установить переменную среды Name = Value;
      Value = FieldValue;
-     SetEnvVar(Name, EnvType, Value);
-   elsif lo(FieldName) = lo("envtype"):
-     EnvType = FieldValue;
-     if name <> nil:
-       Value = GetEnvVar(Name, EnvType);
-     fi;
-     if lWshShell :
-       if EnvType <> nil:
-         if  oWshShell = nil:
-           oWshShell = autoobject.OpenOrCreate("WScript.Shell", true);
-         fi;
-         --oEnvironment = oWshShell.Environment(GetEnvTypeCode(EnvType));
-         --oEnvironment = oWshShell.invoke("Environment",up(GetEnvTypeCode(EnvType)));
-         oEnvironment = oWshShell.Environment('<'+up(GetEnvTypeCode(EnvType))+'>');
-       else
-         oEnvironment =  nil;
-       fi;
+     SetEnvVar(Name, Value, Owner);
+   elsif lo(FieldName) = lo("owner"):
+     Owner = FieldValue;
+     if Name <> nil:
+       Value = GetEnvVar(Name, Owner);
      fi;
    fi;
  end;
  --}
 
-inobject private
-  oEnvVars: Storage;
-  oWshShell: AutoObject;
-  oEnvironment: AutoObject;
-  -- oWMIService: WMI.Service;
-
-
-  func GetEnvTypeCode(locEnvType: tEnvType): String ;
-    Result = aEnvTypeCode[locEnvType];
+  func GetEnvVar(EnvVarName: String; EnvOwner: string = EnvOwnerByDef): String;
+     result = wmiGetEnvVar(EnvVarName, if(EnvOwner=nil, EnvOwnerByDef, EnvOwner));
   end;
 
-  func GetEnvTypeName(locEnvType: tEnvType): String ;
-    Result = aEnvTypeName[locEnvType];
-  end;
-
-  func _GetFieldName(locEnvVarName: String; locEnvType: tEnvType): String;
-    --Result = '_' + str(GetEnvTypeCode(locEnvType)) + '_' + locEnvVarName;
-    Result = '_' + str(locEnvType) + '_' + locEnvVarName;
-  end;
-
-  func GetEnvType(locEnvVarUserName:String):tEnvType;
-    var iter: integer;
-    for  iter = 1 .. lengthofarray(aEnvTypeCode) do
-      if up(locEnvVarUserName) =  '<' + up(aEnvTypeCode[iter]) + '>':
-        Result = tEnvType(iter);
-        break;
+  func GetEnvVarAllOwners(EnvVarName: String): String[];
+    var index, iResult: integer;
+    var locEnvVarValue: string;
+    for index = 1.. lengthofarray(EnvOwners) do
+      locEnvVarValue = wmiGetEnvVar(EnvVarName, EnvOwners[index]);
+      if  locEnvVarValue <> nil:
+        iResult = iResult + 1;
+        result[iResult] = locEnvVarValue;
       fi;
     od;
   end;
 
-  func EnvType2EnvUserName(locEnvType: tEnvType): String;
-    Result = '<' + up(GetEnvTypeCode(locEnvType)) + '>';
-  end;
-
-
-  func GetEnvVar(EnvVarName: String; EnvType:tEnvType): String;
-   if lwmI :
-     result = wmiGetEnvVar(EnvVarName, EnvType);
-   else
-     result = WshShellGetEnvVar(EnvVarName, EnvType);
-   fi;
-  end;
-
-
-proc SetEnvVar(EnvVarName:String; EnvType:tEnvType; EnvVarValue: String);
-   if lwmI :
-     wmiSetEnvVar(EnvVarName, EnvType, EnvVarValue);
-   else
-     WshShellSetEnvVar(EnvVarName, EnvType, EnvVarValue);
-   fi;
+proc SetEnvVar(EnvVarName:String; EnvVarValue: String; EnvOwner:String = EnvOwnerByDef);
+  wmiSetEnvVar(EnvVarName, if(EnvOwner=nil, EnvOwnerByDef, EnvOwner), EnvVarValue);
 end;
 
-  func WshShellGetEnvVar(EnvVarName: String; EnvType:tEnvType): String;
-    if  oWshShell = nil:
-      oWshShell = autoobject.OpenOrCreate("WScript.Shell", true);
-      if EnvType <> nil:
-        --oEnvironment = oWshShell.Environment(GetEnvTypeCode(EnvType));
-        --oEnvironment = oWshShell.invoke("Environment",up(GetEnvTypeCode(EnvType)));
-        oEnvironment = oWshShell.Environment('<'+up(GetEnvTypeCode(EnvType))+'>');
+proc RemEnvVar(EnvVarName:String; EnvOwner:String = EnvOwnerByDef);
+  wmiSetEnvVar(EnvVarName, if(EnvOwner=nil, EnvOwnerByDef, EnvOwner), nil);
+end;
+
+func GetEnvVarOwners: string[];
+  var index: integer;
+  for index = 1 .. lengthofarray(EnvOwners) do
+   result[index] = EnvOwners[index];
+  od;
+end;
+
+
+inobject private
+  oEnvVars: Storage;
+  EnvOwners: string[];
+  EnvOwnerByDef: String; -- владелец среды по умолчанию
+
+  func _GetFieldName(EnvVarName: String; EnvVarOwner: variant): String;
+    var EnvOwnerIndex: Integer;
+    if vartype(EnvVarOwner) = varInt :
+      EnvOwnerIndex = EnvVarOwner;
+    else
+      EnvOwnerIndex = Searchinarray(EnvOwners, EnvVarOwner, , true);
+      if EnvOwnerIndex <= 0:
+        EnvOwnerIndex = 0;
       fi;
     fi;
-    if oEnvironment <> nil :
-      Result = oEnvironment.Item(EnvVarName);
-      --Result = oEnvironment.invoke("Item",EnvVarName);
-    fi;
+    Result = '_' + str(EnvOwnerIndex) + '_' + EnvVarName;
   end;
 
-  proc WshShellSetEnvVar(EnvVarName:String; EnvVarType:tEnvType; EnvVarValue: String);
-      if  oWshShell = nil:
-        oWshShell = autoobject.OpenOrCreate("WScript.Shell", true);
-        if EnvType <> nil:
-          --oEnvironment = oWshShell.Environment(GetEnvTypeCode(EnvType));
-          --oEnvironment = oWshShell.invoke("Environment",up(GetEnvTypeCode(EnvType)));
-          oEnvironment = oWshShell.Environment('<'+up(GetEnvTypeCode(EnvType))+'>');
-        fi;
-      fi;
-      if oEnvironment <> nil :
-        --oEnvironment.Item(EnvVarName, EnvVarValue);
-        oEnvironment.invoke("Item",EnvVarName, EnvVarValue);
-      fi;
-  end;
+
 
 --{ инициализаия хранилища переменных окружения ос
 proc WMIInitEnvVars;
@@ -159,11 +114,13 @@ proc WMIInitEnvVars;
   --oSWbemServices = WMI.Service.CreateEx(WMICurrentServer, WMINameSpace);
   var oWMIService: AutoObject;
   var SWbemObjectSet: AutoObject;
-  var index, count: Integer;
+  var index, count, evnownerindex: Integer;
   var SWbemObject: autoobject;
-  var svarname, svarvalue: string;
+  var svarname, svarvalue, svarowner: string;
   oWMIService = autoobject.CreatePath(WMImoniker);
   SWbemObjectSet = oWMIService.ExecQuery(WMIQuery, "WQL", wbemFlagReturnWhenComplete);
+  EnvOwners = nil;
+  EnvOwnerByDef = nil;
   if oEnvVars = nil:
     oEnvVars=storage.Create;
   else
@@ -180,9 +137,16 @@ proc WMIInitEnvVars;
 --colItems("\\.\root\cimv2:Win32_Service.Name=""MDM"""),
 --colItems("\\ServerName\root\cimv2:Win32_Service.Name=""MDM"""),
 --colItems("Win32_Service.Name=""MDM""
-
-
-    svarname = _GetFieldName(string(SWbemObject.name), GetEnvType(string(SWbemObject.username)));
+    svarowner = string(SWbemObject.username);
+    if EnvOwnerByDef = nil:
+      if pos(wbemEnvSystemOwner, up(svarowner))<>0:
+        EnvOwnerByDef = svarowner;
+      fi;
+    fi;
+    if not SearchNearestInArray(EnvOwners, svarowner, evnownerindex):
+      InsertInArray(EnvOwners, evnownerindex, svarowner);
+    fi;
+    svarname = _GetFieldName(string(SWbemObject.name), evnownerindex);
     svarvalue = string(SWbemObject.VariableValue);
     oEnvVars.SetField(svarname, svarvalue);
   od;
@@ -190,20 +154,24 @@ end;
 --}
 
 --{ запись нового значения пременной окружения ос
-proc wmiSetEnvVar(envVarName:String; EnvVarType: tEnvtype; EnvVarValue: String);
+proc wmiSetEnvVar(envVarName:String; EnvVarOwner: String; EnvVarValue: String);
   var oWMIClass, oWMI: AutoObject;
   oWMIClass = autoobject.createpath(WMIEnvClass);
   oWMI = oWMIClass.SpawnInstance_;
   oWMI.name = envVarName;
-  oWMI.username = EnvType2EnvUserName(EnvVarType);
-  oWMI.varvalue = EnvVarValue;
+  oWMI.username = EnvVarOwner;
+  oWMI.variablevalue = EnvVarValue;
   oWMI.Put_;
+  oWMI = nil;
+  oWMIClass = nil;
+  WMIInitEnvVars;
+  value = wmiGetEnvVar(Name, Owner);
 end;
 
-func wmiGetEnvVar(EnvVarName: string; EnvType:tEnvType):String;
+func wmiGetEnvVar(EnvVarName: string; EnvVarOwner: String):String;
   var locFieldName: String;
   if oEnvVars <> nil:
-    locFieldName = _GetFieldName(EnvVarName, EnvType);
+    locFieldName = _GetFieldName(EnvVarName, EnvVarOwner);
     if oEnvVars.fieldexists(locFieldName):
       result = oEnvVars.getfield(locFieldName);
     fi;
@@ -225,7 +193,7 @@ func GetSWbemObject(locSWbemObject: autoObject; locitemindex: integer): autoObje
                          " Exit Function "+ crlf +
                          " End If "+ crlf +
                          " Count = Count + 1 "+ crlf +
-                         "   Next "+ crlf +
+                         " Next "+ crlf +
                          " End Function ");
    return  oScriptCtrl.Run("EnumerateCollection", locSWbemObject, locitemindex);
   fi;

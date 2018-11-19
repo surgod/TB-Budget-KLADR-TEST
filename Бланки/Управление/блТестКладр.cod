@@ -29,7 +29,8 @@ sTypeValue:string[]=["TBC","TBD","XML","CDF","CRD"];
 type ftKLADR = (ftKLADR_KLADR=1, ftKLADR_STREET, ftKLADR_SOCRBASE, ftKLADR_ALTNAMES,
                       ftKLADR_DOMA, ftKLADR_FLAT);
 
-tEnvType: tEnvType;
+--tEnvType: tEnvType;
+sEnvVarOwner: string;
 sEnvVarName: string;
 sEnvVarValue: string;
 
@@ -227,7 +228,28 @@ EnvVar: Библио.Environmentvariable;
     Result = false; -- Продолжаем стандартную обработку
   end;
 
-  proc FieldtEnvTypeOnExit(Cell :TemplateCell; Index :Integer);
+
+  func FieldsEnvVarOwnerOnEnter(Cell :TemplateCell; Index :Integer;
+    Action :Template.EnterTypes) :Logical;
+    -- Параметры:
+    --   Cell: клетка шаблона
+    --   Index: номер кадра, в котором находится клетка
+    --   Action: тип входа (Вход,Вставка,Очистка)
+    -- заполняем пречислимое поле
+    var locowners: string[];
+    if EnvVar = nil:
+      EnvVar = Библио.Environmentvariable.Create;
+    fi;
+    Cell.List.clear;
+    locowners = EnvVar.GetEnvVarOwners;
+    for index = 1 .. lengthofarray(locowners) do
+      Cell.list.add(locowners[index]);
+    od;
+    Result = True; -- Разрешаем войти в поле
+  end;
+
+
+  proc FieldsEnvVarOwnerOnExit(Cell :TemplateCell; Index :Integer);
     -- Обработка события выхода из редактируемого поля
     -- Параметры:
     --   Cell: клетка шаблона
@@ -235,7 +257,7 @@ EnvVar: Библио.Environmentvariable;
     if EnvVar = nil:
       EnvVar = Библио.Environmentvariable.Create;
     fi;
-    EnvVar.Setfield("EnvType", tEnvType);
+    EnvVar.Setfield("Owner", sEnvVarOwner);
     EnvVar.Setfield("Name", sEnvVarName);
     sEnvVarValue = EnvVar.GetField("Value");
   end;
@@ -248,7 +270,7 @@ EnvVar: Библио.Environmentvariable;
     if EnvVar = nil:
       EnvVar = Библио.Environmentvariable.Create;
     fi;
-    EnvVar.Setfield("EnvType", tEnvType);
+    EnvVar.Setfield("Owner", sEnvVarOwner);
     EnvVar.Setfield("Name", sEnvVarName);
     sEnvVarValue = EnvVar.GetField("Value");
   end;
@@ -261,9 +283,9 @@ EnvVar: Библио.Environmentvariable;
     if EnvVar = nil:
       EnvVar = Библио.Environmentvariable.Create;
     fi;
-    EnvVar.Setfield("EnvType", tEnvType);
+    EnvVar.Setfield("Owner", sEnvVarOwner);
     EnvVar.Setfield("Name", sEnvVarName);
-    EnvVar.Setfield("Value", sEnvVarName);
+    EnvVar.Setfield("Value", sEnvVarValue);
     sEnvVarValue = EnvVar.GetField("Value");
   end;
 
