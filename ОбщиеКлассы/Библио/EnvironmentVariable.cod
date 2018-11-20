@@ -13,7 +13,9 @@ class "переменные среды (environment) ќ—";
 --     установить переменную среды, принадлежащую envowner, по умолчанию <System>
 --proc remenvvar(envvarname, [envowner])
 --     удалить переменную среды, принадлежащую envowner, по умолчанию <System>
-
+-- owner - владелец среды
+-- name  - им€ переменной
+-- value - значение переменной
 
 inclass public
 
@@ -130,13 +132,6 @@ proc WMIInitEnvVars;
   for index = 0 .. count do
     --SWbemObject = SWbemObjectSet.ItemIndex(index);
     SWbemObject = GetSWbemObject(SWbemObjectSet, index);
-
---colItems.Item("\\.\root\cimv2:Win32_Service.Name=""MDM"""),
---colItems.Item("\\ServerName\root\cimv2:Win32_Service.Name=""MDM"""),
---colItems.Item("Win32_Service.Name=""MDM"""),
---colItems("\\.\root\cimv2:Win32_Service.Name=""MDM"""),
---colItems("\\ServerName\root\cimv2:Win32_Service.Name=""MDM"""),
---colItems("Win32_Service.Name=""MDM""
     svarowner = string(SWbemObject.username);
     if EnvOwnerByDef = nil:
       if pos(wbemEnvSystemOwner, up(svarowner))<>0:

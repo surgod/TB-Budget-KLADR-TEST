@@ -24,7 +24,7 @@ func create : UserObject ;
   Result = inherited create;
 end;
 
-inobject
+inobject public
 ZipFileName:string;
 DestFolder:string;
 DestFileName:string;
@@ -65,11 +65,50 @@ else
 --                                FOF_NOSUBDIRECTORIES+
 --                                FOF_NOCONNECTEDFILES);
  oDestFolder.CopyHere(oZipFile, FOF_CONFIRMALL);
+ _deletetempfiles;
 fi;
 end;
 
 proc OnDestroy;
 inherited OnDestroy;
+end;
+
+inobject private
+
+proc _deletetempfiles;
+  -- удаление времнных файлов, возникших при распаковке
+  var tempfolders: string[];
+  var oEnvVar: Библио.EnvironmentVariable;
+  var iLen, index: Integer;
+  var stempfolder: string;
+
+  proc _deletefromfolder(loctempfolder:string);
+    var sFolders: string[];
+    var iLen, index: Integer;
+    loctempfolder = СИС2.SysUtils.ExpandEnvironmentStrings(loctempfolder);
+    if ExistFolder(loctempfolder):
+      sFolders = GetFileList(loctempfolder, '*.*', [FindOnlyFolders]);
+      ilen = lengthofarray(sFolders);
+      for index = 1 .. iLen do
+        if pos(lo(СИС2.ФАЙЛ.ExtractFileName(ZipFileName)), lo(sFolders[index])) > 0:
+          removefolder(sFolders[index], true);
+        fi;
+      od;
+    fi;
+  end;
+
+  oEnvVar = Библио.EnvironmentVariable.create;
+  tempfolders = oEnvVar.GetEnvVarAllOwners("TEMP");
+  iLen = lengthofarray(tempfolders);
+  if iLen > 0:
+    sortarray(tempfolders);
+    for index = 1 .. iLen do
+      if stempfolder <> tempfolders[index]:
+        stempfolder = tempfolders[index];
+        _deletefromfolder(stempfolder);
+      fi;
+    od;
+  fi;
 end;
 
 

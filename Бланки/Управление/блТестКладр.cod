@@ -77,6 +77,7 @@ oBtDelSocrbase: Button;
 oBtDelKladr: Button;
 oBtDelStreet: Button;
 oBtTestUnZip: Button;
+oBtTestDelEnvVar: Button;
 oBtLoadSocrBase: Button;
 oBtLoadStreet: Button;
 oBtLoadKladr: Button;
@@ -141,6 +142,8 @@ EnvVar: Библио.Environmentvariable;
    КонвертерDBF2TXT;
   elsif Sender.name="oBtTestUnZip":
    РаспаковатьФайл;
+  elsif Sender.name="oBtTestDelEnvVar":
+   УдалитьПеременнуюСреды;
   elsif Sender.name="oBtLoadSocrBase":
    ЗагрузитьСправочник(ftKLADR_SOCRBASE);
   elsif Sender.name="oBtLoadKladr":
@@ -669,6 +672,16 @@ var oUnZip: UserObject;
   oUnZip.setfield("DestFileName", sUnZipFileName);
   oUnZip.unzip;
 end;
+
+ proc УдалитьПеременнуюСреды;
+   if EnvVar = nil:
+     EnvVar = Библио.Environmentvariable.Create;
+   fi;
+   EnvVar.Setfield("Owner", sEnvVarOwner);
+   EnvVar.Setfield("Name", sEnvVarName);
+   EnvVar.RemEnvVar(sEnvVarName, sEnvVarOwner);
+   sEnvVarValue = EnvVar.GetField("Value");
+ end;
 
  const sKLADRTitul: String = "Классификатор адресов России (КЛАДР)";
  const sKladrBCPFolderDyDefault: String = "KLADR.BCP\"; --Папка бэкапов адресных справочников (КЛАДР)
