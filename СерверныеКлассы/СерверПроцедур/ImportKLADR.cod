@@ -72,8 +72,8 @@ end;
  fi;
  end;
 
-proc SyncKladrBCPFolder;
-   -- Копирование папки бэкапов таблиц КЛАДРа на клиент
+proc CopyKladrBCPFolder2Server;
+   -- Копирование папки бэкапов таблиц КЛАДРа на сервер
   --var sPrjKladrBCPFolder, sLocKladrBCPFolder: String;
   var aFiles: String[];
   var iter,ifiles: Integer;
@@ -97,6 +97,13 @@ proc SyncKladrBCPFolder;
      hint("Загрузка бэкапов справочника КЛАДР",ifiles,ifiles);
     fi;
   fi;
+end;
+
+proc RemKladrBCPFolderFromServer;
+-- Удаление папки бэкапов таблиц КЛАДРа на сервер
+ if existfolder(sSrvKladrBCPFolder):
+   removefolder(sSrvKladrBCPFolder, true);
+ fi;
 end;
 
 proc ЗагрузитьСправочник(FT:ftKLADR);
@@ -136,7 +143,7 @@ trace("Projectinfo.folder="+baseinfo.ProjectByName[self.ClassProject].folder);
 --SessionInfo.MyDocumentsFolder=C:\Documents and Settings\ruslan\My Documents\
 
 if testBCPFiles(FT):
-  SyncKladrBCPFolder;
+  CopyKladrBCPFolder2Server;
   sBCPName= if(FT = ftKLADR_SOCRBASE,sBCPFileName_SOCRBASE,
             if(FT = ftKLADR_KLADR,sBCPFileName_KLADR,
             if(FT = ftKLADR_STREET,sBCPFileName_STREET,
@@ -186,6 +193,7 @@ if testBCPFiles(FT):
      fi;
    fi;
   fi;
+  RemKladrBCPFolderFromServer;
 fi;
 end;
 

@@ -145,11 +145,11 @@ EnvVar: Библио.Environmentvariable;
   elsif Sender.name="oBtTestDelEnvVar":
    УдалитьПеременнуюСреды;
   elsif Sender.name="oBtLoadSocrBase":
-   ЗагрузитьСправочник(ftKLADR_SOCRBASE);
+   ЗагрузитьСправочникЛокально(ftKLADR_SOCRBASE);
   elsif Sender.name="oBtLoadKladr":
-   ЗагрузитьСправочник(ftKLADR_KLADR);
+   ЗагрузитьСправочникЛокально(ftKLADR_KLADR);
   elsif Sender.name="oBtLoadStreet":
-   ЗагрузитьСправочник(ftKLADR_STREET);
+   ЗагрузитьСправочникЛокально(ftKLADR_STREET);
   elsif Sender.name="oBtLoadSocrBaseSP":
    ЗагрузитьСправочникНаСервереПроцедур(ftKLADR_SOCRBASE);
   elsif Sender.name="oBtLoadKladrSP":
@@ -856,22 +856,37 @@ fi;
 end;
 
 proc ЗагрузитьСправочник_socrbase;
-ЗагрузитьСправочник(ftKLADR_SOCRBASE);
+ЗагрузитьСправочникЛокально(ftKLADR_SOCRBASE);
 end;
 proc ЗагрузитьСправочник_kladr;
-ЗагрузитьСправочник(ftKLADR_KLADR);
+ЗагрузитьСправочникЛокально(ftKLADR_KLADR);
 end;
 proc ЗагрузитьСправочник_street;
-ЗагрузитьСправочник(ftKLADR_STREET);
+ЗагрузитьСправочникЛокально(ftKLADR_STREET);
 end;
 proc ЗагрузитьСправочник_altnames;
-ЗагрузитьСправочник(ftKLADR_ALTNAMES);
+ЗагрузитьСправочникЛокально(ftKLADR_ALTNAMES);
 end;
 proc ЗагрузитьСправочник_doma;
-ЗагрузитьСправочник(ftKLADR_DOMA);
+ЗагрузитьСправочникЛокально(ftKLADR_DOMA);
 end;
 proc ЗагрузитьСправочник_flat;
-ЗагрузитьСправочник(ftKLADR_FLAT);
+ЗагрузитьСправочникЛокально(ftKLADR_FLAT);
+end;
+
+proc ЗагрузитьСправочникЛокально(FT:ftKLADR);
+var sProcName:string;
+sProcName= "ЗагрузитьСправочник_"+
+           if(FT = ftKLADR_SOCRBASE,sBCPFileName_SOCRBASE,
+           if(FT = ftKLADR_KLADR,sBCPFileName_KLADR,
+           if(FT = ftKLADR_STREET,sBCPFileName_STREET,
+           if(FT = ftKLADR_ALTNAMES,sBCPFileName_ALTNAMES,
+           if(FT = ftKLADR_DOMA,sBCPFileName_DOMA,sBCPFileName_FLAT)))));
+--КЛАДР_ТЕСТ.СерверПроцедур.ImportKLADR(sProcName);
+with КЛАДР_ТЕСТ.СерверПроцедур.ImportKLADR.Create do
+ evaluate(sProcName);
+od;
+
 end;
 
 proc ЗагрузитьСправочникНаСервереПроцедур(FT:ftKLADR);
