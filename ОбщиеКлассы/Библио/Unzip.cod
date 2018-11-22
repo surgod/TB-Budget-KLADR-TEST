@@ -87,7 +87,7 @@ proc _deletetempfiles;
     var iLen, index: Integer;
     loctempfolder = ÑÈÑ2.SysUtils.ExpandEnvironmentStrings(loctempfolder);
     if ExistFolder(loctempfolder):
-      sFolders = GetFileList(loctempfolder, '*.*', [FindOnlyFolders]);
+      sFolders = GetFileList(loctempfolder, '*.*', [FindOnlyFolders, RecursiveFind]);
       ilen = lengthofarray(sFolders);
       for index = 1 .. iLen do
         if pos(lo(ÑÈÑ2.ÔÀÉË.ExtractFileName(ZipFileName)), lo(sFolders[index])) > 0:
