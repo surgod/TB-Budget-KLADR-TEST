@@ -17,5 +17,7 @@
     <Group Name="ОбщиеКлассы" Type="Classes" Disabled="False"/>
     <Group Name="Бланки" Type="Blanks" Disabled="False"/>
     <Group Name="Приложения" Type="Other" Disabled="False"/>
+    <Group Name="Интерфейсы" Type="Classes" Disabled="False"/>
+    <Group Name="Картотеки" Type="Cards" Disabled="False"/>
   </Groups>
 </Project>
