@@ -12,7 +12,29 @@ inclass public
       Result = јдрес .—правочники.–едјдрес;
     fi;
   end;
+
+  func Ѕланк–едакторѕо«аписи(locRecord: Ѕазовый.—правочники.адрес): Class BlankForm;
+    Return Ѕланк–едакторѕо”молчанию;
+  end;
+
+inobject public
+  func Ѕланк–едактор«аписи: class BlankForm;
+    Return Ѕланк–едакторѕо”молчанию;
+  end;
+
+
+
+
+
+
+
+
+
 --}
+
+
+
+
 
 
 end
