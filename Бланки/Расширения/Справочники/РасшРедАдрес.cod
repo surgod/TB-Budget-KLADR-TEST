@@ -5,8 +5,27 @@ inclass
 inobject
 
 --------------------------------------------------------------------------------
+--{События полей шаблона
+  func Поле_СтрПриПроверке(Cell: TemplateCell; Index: Integer; var Value: Variant): Logical;
+    result = extended Поле_СтрПриПроверке(Cell, Index, Value);
+
+  end;
+
+  func Поле_СтрПриОбзоре(Cell: TemplateCell; Value: Variant; var NewValue :Variant) :Logical;
+    result = extended Поле_СтрПриОбзоре(Cell, Value, NewValue);
+  end;
+
+--}
+
+
 --{ Обработчики событий бланка
 
 --}
+
+--{{ вспомогательны методы
+  proc KLADR_check(index: Integer);
+  end;
+--}}
+
 
 end
