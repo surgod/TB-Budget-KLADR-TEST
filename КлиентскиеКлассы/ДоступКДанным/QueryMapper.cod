@@ -1,0 +1,16 @@
+class  "Сопоставление полей запроса объектам адреса";
+
+inclass
+  func CreateEx(url: String = nil): ДоступКДанным.QueryMapper;
+    Result = inherited Create;
+    Result.AO_URL = url;
+    Result.stFields = storage.Create;
+  end;
+
+inobject
+var AO_URL: string;
+var stFields:Storage;
+
+
+
+end

@@ -1,0 +1,96 @@
+class inherited DynamicObject "Доступ к базе данных адресных объектов";
+import classes Библио;
+import АдресК classes Библио;
+
+inclass
+--var WaitingAsync:  TUL.Promise;
+
+  func BuildingsMapper: ДоступКДанным.QueryMapper;
+    result = ДоступКДанным.QueryMapper.CreateEx;
+--    var res: XMLMapper;
+--
+--    res = XMLMapper.Create;
+--    res.fields[1] = XMLMapperNode.Create;
+--    res.fields[1].nodename = 'sub';
+--    res.fields[1].fieldname = 'sub';
+--    res.fields[1].nodekind = 1;
+--    res.fields[1].repeatable = True;
+--    res.fields[1].nodetype = XMLMapper.Create;
+--    res.fields[1].nodetype.allowreflection = True;
+--    res.fields[2] = XMLMapperNode.Create;
+--    res.fields[2].nodename = 'too_much';
+--    res.fields[2].fieldname = 'too_much';
+--    res.fields[2].nodekind = 1;
+--    res.fields[2].nodetype = 4; --varLogical : Integer = 4;  -- Логическое (булево) значение
+--    res.fields[2].repeatable = False;
+--
+--    return res;
+  end;
+
+  func CreateEx(Url: String): ДоступКДанным.DbAO;
+    Result = inherited Create;
+    Result.BldFetch = ДоступКДанным.QueryFetch.CreateEx;
+    result.QueryMapper = BuildingsMapper;
+  end;
+
+inobject
+
+  var rest_URL: String;
+  var BldFetch: ДоступКДанным.QueryFetch;
+  var QueryMapper: ДоступКДанным.QueryMapper;
+  var SubCache: Storage;
+
+  proc PollBuildings(AO_GUID:String);
+  end;
+
+  func GetBuildings(AO_GUID:String):Storage[];
+    if AO_GUID='' then
+      return [];
+    fi;
+    PollBuildings(AO_GUID);
+    Result = BldFetch.stQuery as Storage[];
+  end;
+
+  func SubB(aoguid: String): Variant;
+    return BldFetch.Call([aoguid]);
+  end;
+
+  func SubO(aoguid: String): Variant;
+    if not SubCache.FieldExists(aoguid) then
+      SubCache.SetField(aoguid, BldFetch.Call([aoguid]));
+    fi;
+    Result = SubCache.GetField(aoguid);
+    if SubCache.Count > 100 then
+       SubCache.DeleteAllFields;
+    fi;
+  end;
+
+  func BldInfo(aoguid: String; bldguid: String): Variant;
+  end;
+
+  func SearchAO(filter_by: Storage): Variant;
+  var Name_like: String;
+  var filter_1: Storage;
+  var i: Integer;
+    Name_like = '';
+    filter_1 = Storage.Create;
+    for i = 1..filter_by.Count do
+      if filter_by.IndexByNumber[i] = "name_like" then
+         Name_like = filter_by.ItemsByNumber[i];
+      else
+         filter_1.SetField(filter_by.IndexByNumber[i], filter_by.ItemsByNumber[i]);
+      end;
+    od;
+--    if filter_by.FieldExists('name_like') then
+--       Name_like = filter_by.GetField('name_like');
+--       filter_by.DeleteField('name_like');
+--    fi;
+    return BldFetch.Call([filter_by, Name_like]);
+  end;
+
+
+  func AOInfo(aoguid: String): Storage;
+  end;
+
+
+end

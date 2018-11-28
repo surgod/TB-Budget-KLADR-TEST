@@ -1,0 +1,37 @@
+class inherited ДоступКДанным.DbAO "Доступ к КЛАДРу локально";
+import classes Библио;
+import АдресК classes Библио;
+
+inclass
+  --var WaitingAsync: WebTL.HTTPAsync;
+
+  func BuildingsMapper: ДоступКДанным.QueryMapper;
+    result = inherited BuildingsMapper;
+--    var res: XMLMapper;
+--    res = XMLMapper.Create;
+--    res.fields[1] = XMLMapperNode.Create;
+--    res.fields[1].nodename = 'sub';
+--    res.fields[1].fieldname = 'sub';
+--    res.fields[1].nodekind = 1;
+--    res.fields[1].repeatable = True;
+--    res.fields[1].nodetype = XMLMapper.Create;
+--    res.fields[1].nodetype.allowreflection = True;
+--    res.fields[2] = XMLMapperNode.Create;
+--    res.fields[2].nodename = 'too_much';
+--    res.fields[2].fieldname = 'too_much';
+--    res.fields[2].nodekind = 1;
+--    res.fields[2].nodetype = 4; --varLogical : Integer = 4;  -- Логическое (булево) значение
+--    res.fields[2].repeatable = False;
+--
+--    return res;
+  end;
+
+  func CreateEx(sType: String): ДоступКДанным.KLADR;
+    Result = inherited CreateEx(sType);
+  end;
+
+
+
+inobject
+
+end

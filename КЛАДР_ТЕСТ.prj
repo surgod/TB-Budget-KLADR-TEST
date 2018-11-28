@@ -13,6 +13,7 @@
   </Usage>
   <Groups>
     <Group Name="Классы" Type="Classes" Disabled="False"/>
+    <Group Name="КлиентскиеКлассы" Type="Classes" Disabled="False"/>
     <Group Name="СерверныеКлассы" Type="Classes" Disabled="False"/>
     <Group Name="ОбщиеКлассы" Type="Classes" Disabled="False"/>
     <Group Name="Бланки" Type="Blanks" Disabled="False"/>

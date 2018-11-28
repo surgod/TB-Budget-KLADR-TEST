@@ -4,8 +4,34 @@ inclass
 
 inobject
 
---------------------------------------------------------------------------------
+--{Объекты шаблона
+--}
+
+--{Поля шаблона
+
+  var UseKladr: logical; -- признак использования кладр в оффлайне
+                         -- в этом слчае используется бэкенд для КЛАДРа оффлайн
+--}
+
+--{Вспомогательные процедуры и функции
+
+  proc KLADR_check(index: Integer);
+  end;
+
+--}
+
+--{События шаблона
+
+  proc шаблон_ПриОткрытии(Create :Logical);
+    extended шаблон_ПриОткрытии(Create);
+    UseKladr = АдресК.Библио.UseKladr;
+    UseFiosm = UseFiosm or UseKladr;
+  end;
+
+--}
+
 --{События полей шаблона
+
   func Поле_СтрПриПроверке(Cell: TemplateCell; Index: Integer; var Value: Variant): Logical;
     result = extended Поле_СтрПриПроверке(Cell, Index, Value);
 
@@ -16,16 +42,5 @@ inobject
   end;
 
 --}
-
-
---{ Обработчики событий бланка
-
---}
-
---{{ вспомогательны методы
-  proc KLADR_check(index: Integer);
-  end;
---}}
-
 
 end
