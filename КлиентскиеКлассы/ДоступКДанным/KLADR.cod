@@ -1,5 +1,4 @@
 class inherited ДоступКДанным.DbAO "Доступ к КЛАДРу локально";
-import classes Библио;
 import АдресК classes Библио;
 
 inclass

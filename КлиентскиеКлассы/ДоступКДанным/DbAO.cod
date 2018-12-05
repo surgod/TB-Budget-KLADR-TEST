@@ -1,5 +1,4 @@
 class inherited DynamicObject "Доступ к базе данных адресных объектов";
-import classes Библио;
 import АдресК classes Библио;
 
 inclass
