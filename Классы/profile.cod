@@ -5,14 +5,17 @@ class "Profile";
 
 inclass
 
-proc preinit;
+  proc preinit;
   
-end;
+  end;
 
-proc init;
- openblank("Управление.блТестКладр");
-end;
+  proc init;
+   openblank("Управление.блТестКладр");
+  end;
 
-inobject
+  proc GetSessionInfo;
+    AddSessionInfo(СИС2.Константы.ЗаголовокИнформацииОРелизахТББ, 'Версия проекта ' + ClassProject + ' : ' + Str(Константы.ПолучитьВерсиюПроекта, '0.000'));
+  end;
+
 
 end
