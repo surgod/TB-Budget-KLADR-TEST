@@ -168,6 +168,8 @@ EnvVar: Библио.Environmentvariable;
    TestFormatLog;
   elsif Sender.name="oBtTestSQL":
    TestADO;
+  elsif Sender.name="oBtTestDotNet":
+   resString = SHA256Managed(srcString);
   fi;
   end;
 
@@ -1353,6 +1355,19 @@ if  locRClass<>nil:
  Библио.SQL.openWorkAreaSQL("",sSQL,"sRecClassName_SOCRBASE");
 fi;
 end;
+
+srcString: string;
+resString: string;
+
+func SHA256Managed(srcString: string): string;
+var Ole: AutoObject;
+var src_bytes: BinaryObject;
+    Ole = AutoObject.Create("System.Security.Cryptography.SHA256Managed");
+    src_bytes = BinaryObject.Create;
+    src_bytes.SetString(srcString, TextFile.UTF8);
+    result = Ole.ComputeHash_2(src_bytes).AsHex;
+end;
+
 --}
 
 end
