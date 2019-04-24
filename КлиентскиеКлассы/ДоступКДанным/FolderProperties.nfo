@@ -2,6 +2,7 @@
 <Properties Version="1"/>
 <Items>
   <Item Name="DbAO"/>
-  <Item Name="QueryMapper"/>
   <Item Name="KLADR"/>
+  <Item Name="QueryMapper"/>
+  <Item Name="QueryFetch"/>
 </Items>

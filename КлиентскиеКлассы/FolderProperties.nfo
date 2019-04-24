@@ -4,5 +4,6 @@
 </Properties>
 <Items>
   <Item Name="Расширения"/>
-  <Item Name="КлассыДоступаКДанным"/>
+  <Item Name="ДоступКДанным"/>
+  <Item Name="АО"/>
 </Items>
