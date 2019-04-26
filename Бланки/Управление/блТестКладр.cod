@@ -117,6 +117,8 @@ EnvVar: Библио.Environmentvariable;
   #end
   elsif Sender.name="oBtInfobaseExplorer":
    ExecuteCommand("Kernel.Service.InfobaseExplorer");
+  elsif Sender.name="oBtInfobaseTune":
+   ОткрытьБланк('ТББ_Базовый.Настройки.блГлобальныеНастройки');
   elsif Sender.name="oBtImpKladr":
    ИмпортЗаписейКладр("Базовый.Классификаторы.РегионИГород",sKladrFileName,eiTypeValue);
   elsif Sender.name="oBtImpStreet":
