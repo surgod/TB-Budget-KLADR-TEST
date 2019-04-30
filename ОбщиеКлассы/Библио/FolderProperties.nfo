@@ -2,5 +2,6 @@
 <Properties Version="1"/>
 <Items>
   <Item Name="Unzip"/>
+  <Item Name="EnvironmentVariable1"/>
   <Item Name="EnvironmentVariable"/>
 </Items>

@@ -1,4 +1,5 @@
 class "переменные среды (environment) ОС";
+
 -- класс для обращения с переменным среды выполнения операционной системы
 -- методы и свойства класса Environmentvariable
 
@@ -176,8 +177,13 @@ end;
 func GetSWbemObject(locSWbemObject: autoObject; locitemindex: integer): autoObject;
   var oScriptCtrl: AutoObject;
   var crlf: string;
+--  var sErrMsg: string;
   crlf = chr(13) + chr(10);
-  oScriptCtrl=Autoobject.Create("MSScriptControl.ScriptControl");
+  try
+    oScriptCtrl=Autoobject.Create("MSScriptControl.ScriptControl");
+  except
+--    sErrMsg = '[' + tostr(ErrorCode)+'] '+ErrorText;
+  end;
   if oScriptCtrl <> nil:
      oScriptCtrl.Language = "vbscript";
      oScriptCtrl.AddCode("Function EnumerateCollection(ObjSet,Number)" + crlf +
@@ -190,8 +196,22 @@ func GetSWbemObject(locSWbemObject: autoObject; locitemindex: integer): autoObje
                          " Count = Count + 1 "+ crlf +
                          " Next "+ crlf +
                          " End Function ");
-   return  oScriptCtrl.Run("EnumerateCollection", locSWbemObject, locitemindex);
+   try
+     result = oScriptCtrl.Run("EnumerateCollection", locSWbemObject, locitemindex);
+   except
+--    sErrMsg = '[' + tostr(ErrorCode)+'] '+ErrorText;
+   end;
   fi;
+  if result = nil:
+    try
+      result = locSWbemObject.ItemIndex(locitemindex);
+    except
+--      sErrMsg = sErrMsg + CRLF + '[' + tostr(ErrorCode)+'] '+ErrorText;
+    end;
+  fi;
+--  if result = nil and  sErrMsg <> '':
+--     --Message(sErrMsg, mtWarning);
+--  fi;
 end;
 
 

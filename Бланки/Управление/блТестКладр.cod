@@ -30,9 +30,9 @@ type ftKLADR = (ftKLADR_KLADR=1, ftKLADR_STREET, ftKLADR_SOCRBASE, ftKLADR_ALTNA
                       ftKLADR_DOMA, ftKLADR_FLAT);
 
 --tEnvType: tEnvType;
-sEnvVarOwner: string;
-sEnvVarName: string;
-sEnvVarValue: string;
+var sEnvVarOwner: string;
+var sEnvVarName: string;
+var sEnvVarValue: string;
 
 inobject
 
