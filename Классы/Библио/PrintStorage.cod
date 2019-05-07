@@ -1,0 +1,22 @@
+class "Распечатка хранилища";
+
+inclass
+
+  func Print(oStorage: Storage): string[];
+    var iter:Integer;
+    if oStorage.Count > 0 :
+      result[1] = СИС2.СтроковыеФункции.Format('В хранилище полей - %d', [oStorage.count]);
+    fi;
+    for iter = 1 .. oStorage.Count do
+      InsertInArray(
+        result,
+        iter + 1,
+        oStorage.IndexByNumber[iter] + '=' + ToStr(oStorage.ItemsByNumber[iter])
+        );
+    od;
+  end;
+
+
+inobject
+
+end

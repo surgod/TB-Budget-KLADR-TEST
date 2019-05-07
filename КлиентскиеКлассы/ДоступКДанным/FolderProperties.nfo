@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <Properties Version="1"/>
 <Items>
-  <Item Name="DbAO"/>
   <Item Name="KLADR"/>
+  <Item Name="DbAO"/>
   <Item Name="QueryMapper"/>
   <Item Name="QueryFetch"/>
 </Items>
