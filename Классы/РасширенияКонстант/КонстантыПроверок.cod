@@ -1,0 +1,53 @@
+extends Константы "Константы, используемые проектом";
+
+inclass public
+
+type tXmlDocType synonym тХМЛДокТип = (tXmlDoc2NDFL_505 = 0, tXmlDoc2NDFL_506, tXmlDoc6NDFL_501, tXmlDoc6NDFL_502,
+     tXmlDocPFR_ODB1_2019, tXmlDocPFR_SZVSTAJ_2019, tXmlDocPFR_SZVTD_2019);
+
+const XmlDoc2NDFL_505_Path: string = "%project%\Прилолжения\XSD\НДФЛ\2НДФЛ_505";
+const XmlDoc2NDFL_506_Path: string = "%project%\Прилолжения\XSD\НДФЛ\2НДФЛ_506";
+const XmlDoc6NDFL_501_Path: string = "%project%\Прилолжения\XSD\НДФЛ\6НДФЛ_501";
+const XmlDoc6NDFL_502_Path: string = "%project%\Прилолжения\XSD\НДФЛ\6НДФЛ_502";
+const XmlDocPFR_ODB1_2019_Path: string = "%project%\Прилолжения\XSD\ПФР\ОДВ1_19";
+const XmlDocPFR_SZVSTAJ_2019_Path: string = "%project%\Прилолжения\XSD\ПФР\СЗВСТАЖ_19";
+const XmlDocPFR_SZVTD_2019_Path: string = "%project%\Прилолжения\XSD\ПФР\СЗВТД_19";
+
+const XmlDoc2NDFL_505_Xsd: string = "NO_NDFL2_1_399_00_05_05_01.xsd";
+const XmlDoc2NDFL_506_Xsd: string = "NO_NDFL2_1_399_00_05_06_01.xsd";
+const XmlDoc6NDFL_501_Xsd: string = "NO_NDFL6_1_152_00_05_01_02.xsd";
+const XmlDoc6NDFL_502_Xsd: string = "NO_NDFL6_1_152_00_05_02_02.xsd";
+const XmlDocPFR_ODB1_2019_Xsd: string = "ОДВ-1_2017-12-25.xsd";
+const XmlDocPFR_SZVSTAJ_2019_Xsd: string = "СЗВ-СТАЖ_2018-03-22.xsd";
+const XmlDocPFR_SZVTD_2019_Xsd: string = "СЗВ-ТД_2019-12-20.xsd";
+
+var XmlDocType: variant[2] = [
+    [tXmlDoc2NDFL_505, XmlDoc2NDFL_505_Path, XmlDoc2NDFL_505_Xsd],
+    [tXmlDoc2NDFL_506, XmlDoc2NDFL_506_Path, XmlDoc2NDFL_506_Xsd],
+    [tXmlDoc6NDFL_501, XmlDoc6NDFL_501_Path, XmlDoc6NDFL_501_Xsd],
+    [tXmlDoc6NDFL_502, XmlDoc6NDFL_502_Path, XmlDoc6NDFL_502_Xsd],
+    [tXmlDocPFR_ODB1_2019, XmlDocPFR_ODB1_2019_Path, XmlDocPFR_ODB1_2019_Xsd],
+    [tXmlDocPFR_SZVSTAJ_2019, XmlDocPFR_SZVSTAJ_2019_Path, XmlDocPFR_SZVSTAJ_2019_Xsd],
+    [tXmlDocPFR_SZVTD_2019, XmlDocPFR_SZVTD_2019_Path, XmlDocPFR_SZVTD_2019_Xsd]
+    ];
+
+--@doc получение папки с xsd схемами для проверки документа указанного типа
+func GetXsdFolder(tXMLDoc: tXmlDocType): string;
+  var ipos: integer;
+  ipos = searchinarray(XmlDocType, tXMLDoc, [1]);
+  if ipos <> -1:
+    result = XmlDocType[ipos, 2];
+  fi;
+end;
+
+--@doc получение xsd файла для проверки документа указанного типа
+func GetXsdFile(tXMLDoc: tXmlDocType): string;
+  var ipos: integer;
+  ipos = searchinarray(XmlDocType, tXMLDoc, [1]);
+  if ipos <> -1:
+    result = XmlDocType[ipos, 3];
+  fi;
+end;
+
+
+end

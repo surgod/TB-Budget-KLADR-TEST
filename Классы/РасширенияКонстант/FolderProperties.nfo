@@ -1,12 +1,8 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <Properties Version="1">
+  <Property Name="Title" Value="Расширения кл.Константы"/>
+  <Property Name="Enabled" Value="True"/>
   <Property Name="Required" Value="True"/>
   <Property Name="CalcSrv" Value="False"/>
   <Property Name="ProcSrv" Value="False"/>
 </Properties>
-<Items>
-  <Item Name="Библио"/>
-  <Item Name="profile"/>
-  <Item Name="Константы"/>
-  <Item Name="РасширенияКонстант"/>
-</Items>

@@ -16,9 +16,10 @@
     <Group Name="КлиентскиеКлассы" Type="Classes" Disabled="False"/>
     <Group Name="СерверныеКлассы" Type="Classes" Disabled="False"/>
     <Group Name="ОбщиеКлассы" Type="Classes" Disabled="False"/>
-    <Group Name="Бланки" Type="Blanks" Disabled="False"/>
-    <Group Name="Приложения" Type="Other" Disabled="False"/>
     <Group Name="Интерфейсы" Type="Classes" Disabled="False"/>
+    <Group Name="Проверки" Type="Classes" Disabled="False"/>
+    <Group Name="Бланки" Type="Blanks" Disabled="False"/>
     <Group Name="Картотеки" Type="Cards" Disabled="False"/>
+    <Group Name="Приложения" Type="Other" Disabled="False"/>
   </Groups>
 </Project>
