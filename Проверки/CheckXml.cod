@@ -1,0 +1,238 @@
+class "Проверка документа по XSD схеме";
+
+import classes Константы;
+import СИС2 classes СтроковыеФункции, Файл;
+import Базовый classes Библио;
+
+inclass private
+
+const OleDomDocName: String = "Msxml2.DOMDocument.6.0";
+const OleXMLSchemaName: String = "Msxml2.XMLSchemaCache.6.0";
+
+inobject private
+
+var asErrMsg: string[]; -- массив сообщений об ошибках
+var iErrMsg: integer; -- длина массива сообщений об ошибках
+var lExecuted: logical; -- проверка выполнена
+var xmlFile: string; -- имя проверяемого файла
+var xmlType: tXmlType; -- тип проверяемого документа
+var xsdFolder: string; -- путь к папке с xsd схемами
+var xsdFile: string; -- имя xsd файла
+var xsdPath: string; -- полное имя xsd файла
+var xmlNs: string; -- имя пространства имен по умолчанию
+var tempFolder: string; -- имя временной папки с xsd схемами для проверки
+var tempLog: string; -- имя временного лога с ошибками
+var logFile: string; -- имя файл протокола
+var lError: logical; -- признак ошибки
+var errCode: integer; -- код ошибки
+var errText: string; -- сообщение об ошибке
+
+--@doc удаление вспомогательных временных файлов, при уничтожении объекта
+proc OnDestroy;
+  DelTempFolder; -- здесь удаляем временную папку со схемами и логом
+  inherited OnDestroy;
+end;
+
+--@doc формирование сообщения об i-ой ошибке
+func XMLError2String(aoErr: AutoObject): string;
+result = format('[%d:%d] %s',
+                [aoErr.line as integer,
+                 aoErr.linepos as integer,
+                 aoErr.reason as string
+                ]);
+end;
+
+--@Doc Копирование папки c xsd схемами во временную папку
+proc CopyXsd2Temp;
+  if existfolder(xsdFolder):
+    if existfolder(tempFolder):
+      СинхронизироватьПапки(xsdFolder, tempFolder);
+    fi;
+  else
+    -- здесь сгенерировать сообщение об ощибки
+    -- а exsept делать общий на всесь класс
+  fi;
+end;
+
+--@doc Получить верменную папку
+func GetTempFolder: string;
+  var sLocalfolder: string;
+  sLocalfolder = Sessioninfo.localfolder + GetGuid(false);
+  if not existfolder(sLocalFolder):
+    createfolder(sLocalFolder);
+  fi;
+  if existfolder(sLocalFolder):
+    result = sLocalFolder;
+  fi;
+end;
+
+
+--@Doc Удаление локальной папки c xsd схемами и логом
+proc DelTempFolder;
+  if existfolder(tempFolder):
+    removefolder(tempFolder, true);
+  fi;
+end;
+
+--@Doc получение ошибок по файлу
+proc GetErrors(sPathXML: String; sPathXSD:String; sNameSpace:String);
+  var xs, xd, err, errAll, errIt: autoobject;
+  var iter:integer;
+  asErrMsg = nil;
+  iErrMsg = 0;
+  xd=AutoObject.Create(OleDomDocName);
+  xs=AutoObject.Create(OleXMLSchemaName);
+  try
+    try
+      xd.Async = False;
+      xd.ValidateOnParse = True;
+      xd.resolveExternals = True;
+      xd.SetProperty("MultipleErrorMessages", True);
+      xs.add(sNameSpace, sPathXSD);
+      xd.schemas = xs;
+      xd.load(sPathXML);
+      err = xd.parseError as Autoobject;
+      try
+        lExecuted = true;
+        if err.ErrorCode as integer <> 0:
+          errAll = err.allErrors as autoobject;
+          try
+            iErrMsg = errall.length as integer;
+            for iter = 1 .. iErrMsg do
+              errIt = errall.item(iter - 1) as AutoObject;
+              try
+                asErrMsg[iter] = XMLError2String(errit);
+              finally
+                errit = nil;
+              end;
+            od;
+          finally
+            errAll = nil;
+          end;
+        fi;
+      finally
+        err = nil;
+      end;
+    finally
+      xd = nil;
+      xs = nil;
+    end;
+  except
+    errCode = ErrorCode;
+    errText = ErrorText;
+    lError = true;
+  end;
+end;
+
+inclass public
+
+--@ создание объекта CheckXml
+func CreateEx(sXML: string; tXml: tXmlType; sLog: string = nil): CheckXml;
+  if ExistFile(sXML):
+    result = inherited Create;
+    with result do
+      xmlType = tXml;
+      xmlFile = sXML;
+      logFile = sLog;
+      xsdFolder = GetXsdFolder(tXml);
+      xsdFile = GetXsdFile(tXml);
+      xmlNs = GetNs(tXml);
+      tempFolder = GetTempFolder;
+      xsdPath = GetFullFileName(tempFolder, xsdFile);
+      if logFile = nil:
+        logFile = GetFullFileName(ExtractFilePath(xmlFile), ExtractFileNameWithoutExt(ExtractFileName(xmlFile)) + ".log");
+      fi;
+      tempLog = GetFullFileName(tempFolder, ExtractFileNameWithoutExt(ExtractFileName(xmlFile)) + ".log");
+      copyXsd2Temp;
+      GetErrors(xmlFile, xsdPath, xmlNs);
+    end;
+  else
+    result = nil;
+  fi;
+end;
+
+--@ создание & выполнение объекта CheckXml
+proc Execute(sXML: string; tXml: tXmlType; sLog: string = nil);
+  var oCheckXml: CheckXml;
+  if ExistFile(sXML):
+    oCheckXml = inherited Create;
+    with oCheckXml do
+      xmlType = tXml;
+      xmlFile = sXML;
+      logFile = sLog;
+      xsdFolder = GetXsdFolder(tXml);
+      xsdFile = GetXsdFile(tXml);
+      xmlNs = GetNs(tXml);
+      tempFolder = GetTempFolder;
+      xsdPath = GetFullFileName(tempFolder, xsdFile);
+      if logFile = nil:
+        logFile = GetFullFileName(ExtractFilePath(xmlFile), ExtractFileNameWithoutExt(ExtractFileName(xmlFile)) + ".log");
+      fi;
+      tempLog = GetFullFileName(tempFolder, ExtractFileNameWithoutExt(ExtractFileName(xmlFile)) + ".log");
+      copyXsd2Temp;
+      GetErrors(xmlFile, xsdPath, xmlNs);
+      View;
+    end;
+  else
+    message(format("Не найден файл '%s'!", [sXML]));
+  fi;
+end;
+
+inobject public
+
+--@doc просмотр ошибок
+proc View;
+  var iter: integer;
+  var oFile: TextFile;
+  if iErrMsg > 0:
+    if LogFile <> "":
+      iter = Enquiry("Выберите:", format("При проверке файла обнаружено ошибок : %d. Показать?",[iErrMsg]),
+             ["Показать", "В сообщения", "Протокол", "Отмена"],,itQuestion);
+    else
+      iter = Enquiry("Выберите:", format("При проверке файла обнаружено ошибок : %d. Показать?",[iErrMsg]),
+             ["Показать", "Вывести в окно сообщений", "Отмена"],,itQuestion);
+    fi;
+    if iter = 1:
+      asErrMsg[iErrMsg + 1] = " ";
+      iter = alternate("Ошибки при проверке xml файла:", asErrMsg, 100);
+      if iter <> 0:
+        trace(asErrMsg[iter]);
+      fi;
+    elsif iter = 2:
+      cleartrace;
+      for iter = 1 .. iErrMsg do
+        trace(asErrMsg[iter]);
+      od;
+    elsif iter = 3 and LogFile <> "":
+      oFile = TextFile.Create(LogFile, fmCreate);
+      try
+        for iter = 1 .. iErrMsg do
+          oFile.WriteLn(asErrMsg[iter]);
+        od;
+      finally
+        oFile.Flush;
+      end;
+      oFile = nil;
+      OpenEditor(LogFile, false);
+    fi;
+  elsif lError:
+    Message(format("При проверке файла '%s' возникла ошибка ([%s]:'%s') !", [xmlFile, tostr(errCode), errText]));
+  elsif lExecuted:
+    Message(format("В файле '%s' ошибок не обнаружено!", [xmlFile]));
+  else
+    message(format("Не удалось проверить файл '%s'!", [xmlFile]));
+  fi;
+end;
+
+--@doc количество ошибок
+func Count: integer;
+  --result = LengthOfArray(asErrMsg);
+  result = iErrMsg;
+end;
+
+--@doc сохранить протокол ошибок
+proc Save(sLogFile: string);
+  LogFile = sLogFile;
+end;
+
+end

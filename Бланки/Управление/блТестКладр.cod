@@ -65,6 +65,7 @@ FrPage4: TemplateFrame;
 frPage5: TemplateFrame;
 frPage6: TemplateFrame;
 frPage7: TemplateFrame;
+frPage8: TemplateFrame;
 oBtImpKladr: Button;
 oBtImpStreet: Button;
 oBtImpSocrbase: Button;
@@ -172,6 +173,8 @@ EnvVar: Библио.Environmentvariable;
    TestADO;
   elsif Sender.name="oBtTestDotNet":
    resString = SHA256Managed(srcString);
+  elsif Sender.name="oBtTestCheckXml":
+   TestCheckXml;
   fi;
   end;
 
@@ -189,6 +192,7 @@ EnvVar: Библио.Environmentvariable;
   proc BlankOnOpen(Create :Logical);
     -- Вызывается при открытия окна формы
     --   Create: True - форма открывается, False - форма восстанавливается при запуске сессии
+   ОбновитьСписокПоля(Template.FrameByName['frPage8'].CellByField['tXml'], Константы.XmlType, 1, 5);
    ПоказатьОбъекты;
   end;
 
@@ -209,6 +213,12 @@ EnvVar: Библио.Environmentvariable;
       sExt="Любой|*.*";
       if choosefile(Value,sPrompt,sExt)=cmOk:
        NewValue=extractfilename(Value);
+      fi;
+    elsif Cell.Contents="xmlFile":
+      sPrompt="Укажите имя Xml документпа";
+      sExt="xml документ|*.xml";
+      if choosefile(Value,sPrompt,sExt)=cmOk:
+       NewValue=Value;
       fi;
     else
       if  Cell.Contents="sDBFFileName":
@@ -327,14 +337,15 @@ proc   ОткрытьФорму synonym ОткрытьБланк, ОткрытьКартотеку (sFormClassName: Stri
   fi;
 end;
 proc ПоказатьОбъекты;
+frPage1.visible = (iTab=0);
 frPage2.visible = (iTab=1);
 frPage3.visible = (iTab=2);
 frPage4.visible = (iTab=3);
 frPage5.visible = (iTab=4);
 frPage6.visible = (iTab=5);
 frPage7.visible = (iTab=6);
-frPage1.visible = (iTab=0);
-template.CurrentFrame=if(iTab=1,frPage2,if(iTab=2,frPage3,if(iTab=3,frPage4,if(iTab=4,frPage5,if(iTab=5,frPage6,if(iTab=6,frPage7,frPage1))))));
+frPage8.visible = (iTab=7);
+template.CurrentFrame=if(iTab=1,frPage2,if(iTab=2,frPage3,if(iTab=3,frPage4,if(iTab=4,frPage5,if(iTab=5,frPage6,if(iTab=6,frPage7,if(iTab=7,frPage8,frPage1)))))));
 oBtSW.caption="Стaрт секундомера";
 if oStopWatch<>nil then
  if oStopWatch.InAction then
@@ -1368,6 +1379,27 @@ var src_bytes: BinaryObject;
     src_bytes = BinaryObject.Create;
     src_bytes.SetString(srcString, TextFile.UTF8);
     result = Ole.ComputeHash_2(src_bytes).AsHex;
+end;
+
+stored var xmlFile: string;
+stored var tXml: Константы.tXmlType;
+
+--@doc тестирование CheckXml
+proc TestCheckXml;
+ CheckXml.Execute(xmlFile, tXml);
+end;
+
+--@doc Создает список в поле перечислимого типа на основании константы - многомерного массива,
+--@doc по умолчанию имеющего структуру [[Код:Integer,Наименование:String]]
+proc ОбновитьСписокПоля(locCell: TemplateCell; locList: Variant[2]; ИндексКода: Integer = 1; ИндексОписания: Integer = 2);
+  var i, ii: Integer;
+  if (locCell <> nil):
+    locCell.List.Clear;
+    ii = LengthOfArray(locList);
+    for i = 1 .. ii do
+      locCell.List.Add(locList[i, ИндексОписания] as String + '|' + Str(locList[i, ИндексКода]));
+    od;
+  fi;
 end;
 
 --}

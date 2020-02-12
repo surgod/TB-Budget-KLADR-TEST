@@ -2,9 +2,17 @@
 
 интерфейс
 
-var LogFileName: string; -- файл протокола
+var LogFile: string; -- файл протокола
 func GetErrors(sPathXML:String ;sPathXSD:String; sNameSpace:String): Integer;
 proc ViewErrors   раб.xml.ПоказатьОшибки(false,sErrLogFile);
+--func SaveLog(sLogFile: string): logical; -- сохраняет
+
+
+
+если задан LogFile, то при просмотре в качестве опции выполняется вывод в log файл
+
+
+
 
 проблема:
 Необходимо скопировать файлы xsd локально.
@@ -15,6 +23,7 @@ proc ViewErrors   раб.xml.ПоказатьОшибки(false,sErrLogFile);
    значения:
    tXmlDocPFR_ODB1_2019
    tXmlDocPFR_SZVSTAJ_2019
+   tXmlDocPFR_SZVM_2017
    tXmlDocPFR_TD_2019
    tXmlDoc2NDFL_506
    tXmlDoc2NDFL_505

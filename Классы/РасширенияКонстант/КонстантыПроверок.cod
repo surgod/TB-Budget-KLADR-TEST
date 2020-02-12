@@ -1,53 +1,100 @@
 extends Константы "Константы, используемые проектом";
 
+inclass private
+--@doc получиь папку проекта
+func ProjectFolder: string;
+  result = SessionInfo.InfoBase.ProjectByName[self.ClassProject].Folder;
+end;
+
 inclass public
 
-type tXmlDocType synonym тХМЛДокТип = (tXmlDoc2NDFL_505 = 0, tXmlDoc2NDFL_506, tXmlDoc6NDFL_501, tXmlDoc6NDFL_502,
-     tXmlDocPFR_ODB1_2019, tXmlDocPFR_SZVSTAJ_2019, tXmlDocPFR_SZVTD_2019);
+type tXmlType synonym тХМЛТип = (
+     tXml_2NDFL_505 = 0, tXml_2NDFL_506, tXml_6NDFL_501, tXml_6NDFL_502,
+     tXml_PFR_ODB1_2019, tXml_PFR_SZVSTAJ_2019, tXml_PFR_SZVM_2017, tXml_PFR_SZVTD_2019
+     );
 
-const XmlDoc2NDFL_505_Path: string = "%project%\Прилолжения\XSD\НДФЛ\2НДФЛ_505";
-const XmlDoc2NDFL_506_Path: string = "%project%\Прилолжения\XSD\НДФЛ\2НДФЛ_506";
-const XmlDoc6NDFL_501_Path: string = "%project%\Прилолжения\XSD\НДФЛ\6НДФЛ_501";
-const XmlDoc6NDFL_502_Path: string = "%project%\Прилолжения\XSD\НДФЛ\6НДФЛ_502";
-const XmlDocPFR_ODB1_2019_Path: string = "%project%\Прилолжения\XSD\ПФР\ОДВ1_19";
-const XmlDocPFR_SZVSTAJ_2019_Path: string = "%project%\Прилолжения\XSD\ПФР\СЗВСТАЖ_19";
-const XmlDocPFR_SZVTD_2019_Path: string = "%project%\Прилолжения\XSD\ПФР\СЗВТД_19";
+--const Xml_2NDFL_505_Path: string = "%projects%\Прилолжения\XSD\НДФЛ\2НДФЛ_505";
+--const Xml_2NDFL_506_Path: string = "%projects%\Прилолжения\XSD\НДФЛ\2НДФЛ_506";
+--const Xml_6NDFL_501_Path: string = "%projects%\Прилолжения\XSD\НДФЛ\6НДФЛ_501";
+--const Xml_6NDFL_502_Path: string = "%projects%\Прилолжения\XSD\НДФЛ\6НДФЛ_502";
+--const Xml_PFR_ODB1_2019_Path: string = "%projects%\Прилолжения\XSD\ПФР\ОДВ1_19";
+--const Xml_PFR_SZVSTAJ_2019_Path: string = "%projects%\Прилолжения\XSD\ПФР\СЗВСТАЖ_19";
+--const Xml_PFR_SZVM_2017_Path: string = "%projects%\Прилолжения\XSD\ПФР\СЗВМ_17";
+--const Xml_PFR_SZVTD_2019_Path: string = "%projects%\Прилолжения\XSD\ПФР\СЗВТД_19";
 
-const XmlDoc2NDFL_505_Xsd: string = "NO_NDFL2_1_399_00_05_05_01.xsd";
-const XmlDoc2NDFL_506_Xsd: string = "NO_NDFL2_1_399_00_05_06_01.xsd";
-const XmlDoc6NDFL_501_Xsd: string = "NO_NDFL6_1_152_00_05_01_02.xsd";
-const XmlDoc6NDFL_502_Xsd: string = "NO_NDFL6_1_152_00_05_02_02.xsd";
-const XmlDocPFR_ODB1_2019_Xsd: string = "ОДВ-1_2017-12-25.xsd";
-const XmlDocPFR_SZVSTAJ_2019_Xsd: string = "СЗВ-СТАЖ_2018-03-22.xsd";
-const XmlDocPFR_SZVTD_2019_Xsd: string = "СЗВ-ТД_2019-12-20.xsd";
+var PrjPath: string = ProjectFolder;
+var Xml_2NDFL_505_Path: string = PrjPath + "Приложения\XSD\НДФЛ\2НДФЛ_505";
+var Xml_2NDFL_506_Path: string = PrjPath + "Приложения\XSD\НДФЛ\2НДФЛ_506";
+var Xml_6NDFL_501_Path: string = PrjPath + "Приложения\XSD\НДФЛ\6НДФЛ_501";
+var Xml_6NDFL_502_Path: string = PrjPath + "Приложения\XSD\НДФЛ\6НДФЛ_502";
+var Xml_PFR_ODB1_2019_Path: string = PrjPath + "Приложения\XSD\ПФР\ОДВ1_19";
+var Xml_PFR_SZVSTAJ_2019_Path: string = PrjPath + "Приложения\XSD\ПФР\СЗВСТАЖ_19";
+var Xml_PFR_SZVM_2017_Path: string = PrjPath + "Приложения\XSD\ПФР\СЗВМ_17";
+var Xml_PFR_SZVTD_2019_Path: string = PrjPath + "Приложения\XSD\ПФР\СЗВТД_19";
 
-var XmlDocType: variant[2] = [
-    [tXmlDoc2NDFL_505, XmlDoc2NDFL_505_Path, XmlDoc2NDFL_505_Xsd],
-    [tXmlDoc2NDFL_506, XmlDoc2NDFL_506_Path, XmlDoc2NDFL_506_Xsd],
-    [tXmlDoc6NDFL_501, XmlDoc6NDFL_501_Path, XmlDoc6NDFL_501_Xsd],
-    [tXmlDoc6NDFL_502, XmlDoc6NDFL_502_Path, XmlDoc6NDFL_502_Xsd],
-    [tXmlDocPFR_ODB1_2019, XmlDocPFR_ODB1_2019_Path, XmlDocPFR_ODB1_2019_Xsd],
-    [tXmlDocPFR_SZVSTAJ_2019, XmlDocPFR_SZVSTAJ_2019_Path, XmlDocPFR_SZVSTAJ_2019_Xsd],
-    [tXmlDocPFR_SZVTD_2019, XmlDocPFR_SZVTD_2019_Path, XmlDocPFR_SZVTD_2019_Xsd]
+const Xml_2NDFL_505_Xsd: string = "NO_NDFL2_1_399_00_05_05_01.xsd";
+const Xml_2NDFL_506_Xsd: string = "NO_NDFL2_1_399_00_05_06_01.xsd";
+const Xml_6NDFL_501_Xsd: string = "NO_NDFL6_1_152_00_05_01_02.xsd";
+const Xml_6NDFL_502_Xsd: string = "NO_NDFL6_1_152_00_05_02_02.xsd";
+const Xml_PFR_ODB1_2019_Xsd: string = "ОДВ-1_2017-12-25.xsd";
+const Xml_PFR_SZVSTAJ_2019_Xsd: string = "СЗВ-СТАЖ_2018-03-22.xsd";
+const Xml_PFR_SZVM_2017_Xsd: string = "СЗВ-М_2017-01-01.xsd";
+const Xml_PFR_SZVTD_2019_Xsd: string = "СЗВ-ТД_2019-12-20.xsd";
+
+const Xml_2NDFL_505_NS: string = "";
+const Xml_2NDFL_506_NS: string = "";
+const Xml_6NDFL_501_NS: string = "";
+const Xml_6NDFL_502_NS: string = "";
+const Xml_PFR_ODB1_2019_NS: string = "http://пф.рф/ВС/ОДВ-1/2017-12-25";
+const Xml_PFR_SZVSTAJ_2019_NS: string = "http://пф.рф/ВС/СЗВ-СТАЖ/2018-03-22";
+const Xml_PFR_SZVM_2017_NS: string = "http://пф.рф/ВС/СЗВ-М/2017-01-01";
+const Xml_PFR_SZVTD_2019_NS: string = "http://пф.рф/СЗВ-ТД/2019-12-20";
+
+const Xml_2NDFL_505_Name: string = "2-НДФЛ 5.05";
+const Xml_2NDFL_506_Name: string = "2-НДФЛ 5.06";
+const Xml_6NDFL_501_Name: string = "6-НДФЛ 5.01";
+const Xml_6NDFL_502_Name: string = "6-НДФЛ 5.02";
+const Xml_PFR_ODB1_2019_Name: string = "ОДВ-1 (2019)";
+const Xml_PFR_SZVSTAJ_2019_Name: string = "СЗВ-СТАЖ (2019)";
+const Xml_PFR_SZVM_2017_Name: string = "СЗВ-М (2017)";
+const Xml_PFR_SZVTD_2019_Name: string = "СЗВ-ТД (2019)";
+
+var XmlType: variant[2] = [
+    [tXml_2NDFL_505, Xml_2NDFL_505_Path, Xml_2NDFL_505_Xsd, Xml_2NDFL_505_NS, Xml_2NDFL_505_Name],
+    [tXml_2NDFL_506, Xml_2NDFL_506_Path, Xml_2NDFL_506_Xsd, Xml_2NDFL_506_NS, Xml_2NDFL_506_Name],
+    [tXml_6NDFL_501, Xml_6NDFL_501_Path, Xml_6NDFL_501_Xsd, Xml_6NDFL_501_NS, Xml_6NDFL_501_Name],
+    [tXml_6NDFL_502, Xml_6NDFL_502_Path, Xml_6NDFL_502_Xsd, Xml_6NDFL_502_NS, Xml_6NDFL_502_Name],
+    [tXml_PFR_ODB1_2019, Xml_PFR_ODB1_2019_Path, Xml_PFR_ODB1_2019_Xsd, Xml_PFR_ODB1_2019_NS, Xml_PFR_ODB1_2019_Name],
+    [tXml_PFR_SZVSTAJ_2019, Xml_PFR_SZVSTAJ_2019_Path, Xml_PFR_SZVSTAJ_2019_Xsd, Xml_PFR_SZVSTAJ_2019_NS, Xml_PFR_SZVSTAJ_2019_Name],
+    [tXml_PFR_SZVM_2017, Xml_PFR_SZVM_2017_Path, Xml_PFR_SZVM_2017_Xsd, Xml_PFR_SZVM_2017_NS, Xml_PFR_SZVM_2017_Name],
+    [tXml_PFR_SZVTD_2019, Xml_PFR_SZVTD_2019_Path, Xml_PFR_SZVTD_2019_Xsd, Xml_PFR_SZVTD_2019_NS, Xml_PFR_SZVTD_2019_Name]
     ];
 
 --@doc получение папки с xsd схемами для проверки документа указанного типа
-func GetXsdFolder(tXMLDoc: tXmlDocType): string;
+func GetXsdFolder(tXML: tXmlType): string;
   var ipos: integer;
-  ipos = searchinarray(XmlDocType, tXMLDoc, [1]);
+  ipos = searchinarray(XmlType, tXML, [1]);
   if ipos <> -1:
-    result = XmlDocType[ipos, 2];
+    result = XmlType[ipos, 2];
   fi;
 end;
 
 --@doc получение xsd файла для проверки документа указанного типа
-func GetXsdFile(tXMLDoc: tXmlDocType): string;
+func GetXsdFile(tXML: tXmlType): string;
   var ipos: integer;
-  ipos = searchinarray(XmlDocType, tXMLDoc, [1]);
+  ipos = searchinarray(XmlType, tXML, [1]);
   if ipos <> -1:
-    result = XmlDocType[ipos, 3];
+    result = XmlType[ipos, 3];
   fi;
 end;
 
+--@doc получение обозачения пространства имен (NameSpace) для проверки документа указанного типа
+func GetNS(tXML: tXmlType): string;
+  var ipos: integer;
+  ipos = searchinarray(XmlType, tXML, [1]);
+  if ipos <> -1:
+    result = XmlType[ipos, 4];
+  fi;
+end;
 
 end

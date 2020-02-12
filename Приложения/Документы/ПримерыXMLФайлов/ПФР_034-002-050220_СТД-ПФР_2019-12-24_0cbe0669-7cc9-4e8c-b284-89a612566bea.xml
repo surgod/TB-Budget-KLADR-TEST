@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="../../Преобразования/ЭТК/СТД-ПФР_2019-12-24.xsl"?>
+<ЭДПФР xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://пф.рф/СТД-ПФР/2019-12-24 ../../%D0%A1%D1%85%D0%B5%D0%BC%D1%8B/%D0%AD%D0%A2%D0%9A/%D0%A1%D0%A2%D0%94-%D0%9F%D0%A4%D0%A0_2019-12-24.xsd"
+ xmlns="http://пф.рф/СТД-ПФР/2019-12-24" xmlns:УТ2="http://пф.рф/УТ/2017-08-21"
+ xmlns:ТПУ="http://пф.рф/ПУ/типы/2017-10-08" xmlns:АФ5="http://пф.рф/АФ/2018-12-07">
+	<СТД-ПФР>		
+		<ЗЛ>
+			<УТ2:ФИО>
+				<УТ2:Фамилия>Мирзоян</УТ2:Фамилия>
+				<УТ2:Имя>Лилия</УТ2:Имя>
+				<УТ2:Отчество>Степанова</УТ2:Отчество>
+			</УТ2:ФИО>			
+			<УТ2:СНИЛС>249-249-697 22</УТ2:СНИЛС>
+			<УТ2:ДатаРождения>1994-01-17</УТ2:ДатаРождения>
+		</ЗЛ>
+		<Заявления>
+			<ДатаПродолжение>2020-01-09</ДатаПродолжение>
+		</Заявления>
+		<Мероприятие>
+			<Работодатель>
+				<УТ2:РегНомер>024-002-156651</УТ2:РегНомер>
+				<НаименованиеОрганизации>ООО «Развитие цифровых систем»</НаименованиеОрганизации>
+				<УТ2:ИНН>2465094566</УТ2:ИНН>
+				<УТ2:КПП>246500001</УТ2:КПП>
+			</Работодатель>
+			<!--ПРИЕМ-->
+			<UUID>e3b3f560-fc2d-4650-a812-0d8fbfe828f5</UUID>
+			<Дата>2020-01-09</Дата>
+			<Вид>1</Вид>
+			<Должность>Стажер-тестировщик</Должность>
+			<СтруктурноеПодразделение>Отдел контроля качества</СтруктурноеПодразделение>
+			<Основание>
+				<Наименование>Приказ</Наименование>
+				<Дата>2020-01-09</Дата>
+				<Номер>09-01П</Номер>
+			</Основание>
+		</Мероприятие>
+		<Мероприятие>
+			<Работодатель>
+				<УТ2:РегНомер>024-002-156651</УТ2:РегНомер>
+				<НаименованиеОрганизации>ООО «Развитие цифровых систем»</НаименованиеОрганизации>
+				<УТ2:ИНН>2465094566</УТ2:ИНН>
+			</Работодатель>
+			<!--ПЕРЕВОД-->
+			<UUID>d5082086-44af-4441-b288-c0485da6a26b</UUID>
+			<Дата>2020-01-29</Дата>
+			<Вид>2</Вид>
+			<Сведения>Перевод на должность тестировщика после прохождения испытательного срока</Сведения>
+			<Должность>Тестировщик</Должность>
+			<СтруктурноеПодразделение>Отдел контроля качества</СтруктурноеПодразделение>
+			<Основание>
+				<Наименование>Приказ</Наименование>
+				<Дата>2020-01-29</Дата>
+				<Номер>29-01П</Номер>					
+			</Основание>
+		</Мероприятие>
+		<УполномоченноеЛицо>
+			<УТ2:ФИО>
+				<УТ2:Фамилия>Епихина</УТ2:Фамилия>
+				<УТ2:Имя>А.</УТ2:Имя>
+				<УТ2:Отчество>И.</УТ2:Отчество>
+			</УТ2:ФИО>
+			<УТ2:Должность>Главный специалист</УТ2:Должность>
+		</УполномоченноеЛицо>
+		<ДатаФормирования>2020-02-02</ДатаФормирования>		
+	</СТД-ПФР>
+	<СлужебнаяИнформация>
+		<АФ5:GUID>245d6005-b0f3-4b5d-b551-96240e7352ba</АФ5:GUID>		
+		<АФ5:ДатаВремя>2019-12-04T12:00:00-05:00</АФ5:ДатаВремя>
+		<АФ5:РеквизитыЭП>
+			<АФ5:ОсновноеНазвание>МИЦ ПФР</АФ5:ОсновноеНазвание>
+			<АФ5:Владелец>
+				<УТ2:Фамилия>Янкин</УТ2:Фамилия>
+				<УТ2:Имя>Константин</УТ2:Имя>
+				<УТ2:Отчество>Геннадиевич</УТ2:Отчество>
+			</АФ5:Владелец>
+			<АФ5:Издатель>ПФР</АФ5:Издатель>
+			<АФ5:Идентификатор>01d3999d063db96000009e5a013a005c</АФ5:Идентификатор>
+			<АФ5:СрокДействия>
+				<АФ5:С>2018-01-30T10:36:00+03:00</АФ5:С>
+				<АФ5:По>2019-04-30T10:36:00+03:00</АФ5:По>
+			</АФ5:СрокДействия>
+			<АФ5:СрокДействияЗакрытогоКлюча>
+				<АФ5:С>2018-01-30T10:36:00+03:00</АФ5:С>
+				<АФ5:По>2019-01-30T10:36:00+03:00</АФ5:По>
+			</АФ5:СрокДействияЗакрытогоКлюча>
+		</АФ5:РеквизитыЭП>
+	</СлужебнаяИнформация>
+	<Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
+		<SignedInfo>
+			<CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>
+			<SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#gostr34102001-gostr3411"/>
+			<Reference URI="">
+				<Transforms>
+					<Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/>
+					<Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>
+				</Transforms>
+				<DigestMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#gostr3411"/>
+				<DigestValue>mB5fPKMMhBSHgw+E+0M+E6wRAVabnBNYSsSDI0zWVsA=</DigestValue>
+			</Reference>
+		</SignedInfo>
+		<SignatureValue>xW77F646D1QMMNMwq6JSs648Mxsf/7w+i0QPflbp0n5HVB4RIdrZJICaF8YxI1Cz
+			FX6c5HW1z7k1B5H0JeGSPw==</SignatureValue>
+		<KeyInfo>
+			<X509Data>
+				<X509Certificate>MIIIEDCCB72gAwIBAgIQAdM2rld6UkAAACkrAa4ACDAKBgYqhQMCAgMFADCCAaAx
+					KjAoBgNVBAkMIdCa0LDRgNC70LAg0JzQsNGA0LrRgdCwLCDQtC4yNzLQsDEYMBYG
+					BSqFA2QBEg0xMDIxODAxNjY4NDM3MRowGAYIKoUDA4EDAQESDDAwMTgzMzAwNTE5
+					NjELMAkGA1UEBhMCUlUxFTATBgNVBAcMDNCY0LbQtdCy0YHQujE1MDMGA1UECAws
+					MTgg0KPQtNC80YPRgNGC0YHQutCw0Y8g0KDQtdGB0L/Rg9Cx0LvQuNC60LAxHDAa
+					BgkqhkiG9w0BCQEWDWNhQDAxOS5wZnIucnUxQDA+BgNVBAoMN9Ce0J/QpNCgINC/
+					0L4g0KPQtNC80YPRgNGC0YHQutC+0Lkg0KDQtdGB0L/Rg9Cx0LvQuNC60LUxOjA4
+					BgNVBAsMMdC+0YLQtNC10Lsg0L/QviDQt9Cw0YnQuNGC0LUg0LjQvdGE0L7RgNC8
+					0LDRhtC40LgxRTBDBgNVBAMMPNCj0KYg0J7Qn9Ck0KAg0L/QviDQo9C00LzRg9GA
+					0YLRgdC60L7QuSDQoNC10YHQv9GD0LHQu9C40LrQtTAeFw0xNzA5MjYxMDAxMDBa
+					Fw0yMjA5MjYxMDAxMDBaMIIBgDEhMB8GA1UEAwwYQ3J5cHRvKyBEb3dubG9hZCBT
+					ZXJ2aWNlMSgwJgYDVQQEDB/RgtC10YHRgtC+0LLQsNGPINGE0LDQvNC40LvQuNGP
+					MSAwHgYDVQQqDBfRgtC10YHRgtC+0LLQvtC1INC40LzRjzELMAkGA1UEBhMCUlUx
+					GDAWBgUqhQNkARINMTE1MDEwMTkwMDAwMzEWMBQGBSqFA2QDEgsxMTExMTExMTE0
+					NTEaMBgGCCqFAwOBAwEBEgw1MDAxOTAwMDAwNjMxNTAzBgNVBAgMLDE4INCj0LTQ
+					vNGD0YDRgtGB0LrQsNGPINCg0LXRgdC/0YPQsdC70LjQutCwMRUwEwYDVQQHDAzQ
+					mNC20LXQstGB0LoxDTALBgNVBAgMBHRlc3QxGjAYBgNVBAoMEXRlc3Qgb3JnYW5p
+					emF0aW9uMRMwEQYDVQQMDAp0ZXN0IHRpdGxlMQ8wDQYDVQQLDAZkZXBhcnQxFTAT
+					BgNVBAkMDHRlc3QgYWRkcmVzczBjMBwGBiqFAwICEzASBgcqhQMCAiMBBgcqhQMC
+					Ah4BA0MABED3bNVwedZ0HPS7K9xlD4qut0CF0A6CbCxkBIIqVD4/5SbgbT1CJFUu
+					HmAKnkjYuDcYBLkVK9zzqXGhe2osokWrgQkAMDFBRTAwMDijggPeMIID2jALBgNV
+					HQ8EBAMCA/gwHQYDVR0lBBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMEMAwGA1UdEwEB
+					/wQCMAAwIwYFKoUDZG8EGgwYVmlQTmV0IENTUCBmb3IgTGludXggNC4zMIH3BgUq
+					hQNkcASB7TCB6gwMVmlQTmV0IENTUCA0DDBWaVBOZXQg0KPQtNC+0YHRgtC+0LLQ
+					tdGA0Y/RjtGJ0LjQuSDRhtC10L3RgtGAIDQMU9Ch0LXRgNGC0LjRhNC40LrQsNGC
+					INGB0L7QvtGC0LLQtdGC0YHRgtCy0LjRjyDihJYg0KHQpC8xMjQtMjg2MCDQvtGC
+					IDE1LjAzLjIwMTYg0LMuDFPQodC10YDRgtC40YTQuNC60LDRgiDRgdC+0L7RgtCy
+					0LXRgtGB0YLQstC40Y8g4oSWINCh0KQvMTI4LTI5MzIg0L7RgiAxMC4wOC4yMDE2
+					INCzLjAdBgNVHSAEFjAUMAgGBiqFA2RxATAIBgYqhQNkcQIwSgYIKwYBBQUHAQEE
+					PjA8MDoGCCsGAQUFBzAChi5odHRwOi8vY2EucGZyZi5ydS9vdF91ZG11cnQvY2Ff
+					dWRtdXJ0XzIwMTcuY2VyMD8GA1UdHwQ4MDYwNKAyoDCGLmh0dHA6Ly9jYS5wZnJm
+					LnJ1L290X3VkbXVydC9jYV91ZG11cnRfMjAxNy5jcmwwggGFBgNVHSMEggF8MIIB
+					eIAUSVCfuCU6+B6+6JHZXoobxrEi3OmhggFSpIIBTjCCAUoxHjAcBgkqhkiG9w0B
+					CQEWD2RpdEBtaW5zdnlhei5ydTELMAkGA1UEBhMCUlUxHDAaBgNVBAgMEzc3INCz
+					LiDQnNC+0YHQutCy0LAxFTATBgNVBAcMDNCc0L7RgdC60LLQsDE/MD0GA1UECQw2
+					MTI1Mzc1INCzLiDQnNC+0YHQutCy0LAsINGD0LsuINCi0LLQtdGA0YHQutCw0Y8s
+					INC0LiA3MSwwKgYDVQQKDCPQnNC40L3QutC+0LzRgdCy0Y/Qt9GMINCg0L7RgdGB
+					0LjQuDEYMBYGBSqFA2QBEg0xMDQ3NzAyMDI2NzAxMRowGAYIKoUDA4EDAQESDDAw
+					NzcxMDQ3NDM3NTFBMD8GA1UEAww40JPQvtC70L7QstC90L7QuSDRg9C00L7RgdGC
+					0L7QstC10YDRj9GO0YnQuNC5INGG0LXQvdGC0YCCCiyhoXsAAAAAALIwKwYDVR0Q
+					BCQwIoAPMjAxNzA5MjYxMDAxMDBagQ8yMDE4MTIyNjEwMDEwMFowHQYDVR0OBBYE
+					FEJ/is0BzhdSSgM2zMvya4eb/4/NMAoGBiqFAwICAwUAA0EAk1zF6JtbAM1qTxbC
+					n58r6ZWwId3CmriwT6tvhGBp/kkDq0mnip2PsP+I/bhdtapkRo43/+7+QW109ii+
+					VQZtPw==</X509Certificate>
+			</X509Data>
+		</KeyInfo>
+	</Signature>
+</ЭДПФР>
