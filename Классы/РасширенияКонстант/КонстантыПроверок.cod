@@ -9,7 +9,9 @@ end;
 inclass public
 
 type tXmlType synonym тХМЛТип = (
-     tXml_2NDFL_505 = 0, tXml_2NDFL_506, tXml_6NDFL_501, tXml_6NDFL_502,
+     tXml_2NDFL_505 = 0, tXml_2NDFL_506,
+     tXml_6NDFL_501, tXml_6NDFL_502,
+     tXml_RSV_501, tXml_RSV_502,
      tXml_PFR_ODB1_2019, tXml_PFR_SZVSTAJ_2019, tXml_PFR_SZVM_2017, tXml_PFR_SZVTD_2019
      );
 
@@ -23,19 +25,23 @@ type tXmlType synonym тХМЛТип = (
 --const Xml_PFR_SZVTD_2019_Path: string = "%projects%\Прилолжения\XSD\ПФР\СЗВТД_19";
 
 var PrjPath: string = ProjectFolder;
-var Xml_2NDFL_505_Path: string = PrjPath + "Приложения\XSD\НДФЛ\2НДФЛ_505";
-var Xml_2NDFL_506_Path: string = PrjPath + "Приложения\XSD\НДФЛ\2НДФЛ_506";
-var Xml_6NDFL_501_Path: string = PrjPath + "Приложения\XSD\НДФЛ\6НДФЛ_501";
-var Xml_6NDFL_502_Path: string = PrjPath + "Приложения\XSD\НДФЛ\6НДФЛ_502";
+var Xml_2NDFL_505_Path: string = PrjPath + "Приложения\XSD\ФНС\2НДФЛ\505";
+var Xml_2NDFL_506_Path: string = PrjPath + "Приложения\XSD\ФНС\2НДФЛ\506";
+var Xml_6NDFL_501_Path: string = PrjPath + "Приложения\XSD\ФНС\6НДФЛ\501";
+var Xml_6NDFL_502_Path: string = PrjPath + "Приложения\XSD\ФНС\6НДФЛ\502";
+var Xml_RSV_501_Path: string = PrjPath + "Приложения\XSD\ФНС\РСВ\501";
+var Xml_RSV_502_Path: string = PrjPath + "Приложения\XSD\ФНС\РСВ\502";
 var Xml_PFR_ODB1_2019_Path: string = PrjPath + "Приложения\XSD\ПФР\ОДВ1_19";
 var Xml_PFR_SZVSTAJ_2019_Path: string = PrjPath + "Приложения\XSD\ПФР\СЗВСТАЖ_19";
 var Xml_PFR_SZVM_2017_Path: string = PrjPath + "Приложения\XSD\ПФР\СЗВМ_17";
 var Xml_PFR_SZVTD_2019_Path: string = PrjPath + "Приложения\XSD\ПФР\СЗВТД_19";
 
 const Xml_2NDFL_505_Xsd: string = "NO_NDFL2_1_399_00_05_05_01.xsd";
-const Xml_2NDFL_506_Xsd: string = "NO_NDFL2_1_399_00_05_06_01.xsd";
+const Xml_2NDFL_506_Xsd: string = "NO_NDFL2_1_399_00_05_06_02.xsd";
 const Xml_6NDFL_501_Xsd: string = "NO_NDFL6_1_152_00_05_01_02.xsd";
-const Xml_6NDFL_502_Xsd: string = "NO_NDFL6_1_152_00_05_02_02.xsd";
+const Xml_6NDFL_502_Xsd: string = "NO_NDFL6_1_152_00_05_02_03.xsd";
+const Xml_RSV_501_Xsd: string = "NO_RASCHSV_1_162_00_05_01_11.xsd";
+const Xml_RSV_502_Xsd: string = "NO_RASCHSV_1_162_00_05_02_03.xsd";
 const Xml_PFR_ODB1_2019_Xsd: string = "ОДВ-1_2017-12-25.xsd";
 const Xml_PFR_SZVSTAJ_2019_Xsd: string = "СЗВ-СТАЖ_2018-03-22.xsd";
 const Xml_PFR_SZVM_2017_Xsd: string = "СЗВ-М_2017-01-01.xsd";
@@ -45,6 +51,8 @@ const Xml_2NDFL_505_NS: string = "";
 const Xml_2NDFL_506_NS: string = "";
 const Xml_6NDFL_501_NS: string = "";
 const Xml_6NDFL_502_NS: string = "";
+const Xml_RSV_501_NS: string = "";
+const Xml_RSV_502_NS: string = "";
 const Xml_PFR_ODB1_2019_NS: string = "http://пф.рф/ВС/ОДВ-1/2017-12-25";
 const Xml_PFR_SZVSTAJ_2019_NS: string = "http://пф.рф/ВС/СЗВ-СТАЖ/2018-03-22";
 const Xml_PFR_SZVM_2017_NS: string = "http://пф.рф/ВС/СЗВ-М/2017-01-01";
@@ -54,6 +62,8 @@ const Xml_2NDFL_505_Name: string = "2-НДФЛ 5.05";
 const Xml_2NDFL_506_Name: string = "2-НДФЛ 5.06";
 const Xml_6NDFL_501_Name: string = "6-НДФЛ 5.01";
 const Xml_6NDFL_502_Name: string = "6-НДФЛ 5.02";
+const Xml_RSV_501_Name: string = "РСВ 5.01";
+const Xml_RSV_502_Name: string = "РСВ 5.02";
 const Xml_PFR_ODB1_2019_Name: string = "ОДВ-1 (2019)";
 const Xml_PFR_SZVSTAJ_2019_Name: string = "СЗВ-СТАЖ (2019)";
 const Xml_PFR_SZVM_2017_Name: string = "СЗВ-М (2017)";
@@ -64,6 +74,8 @@ var XmlType: variant[2] = [
     [tXml_2NDFL_506, Xml_2NDFL_506_Path, Xml_2NDFL_506_Xsd, Xml_2NDFL_506_NS, Xml_2NDFL_506_Name],
     [tXml_6NDFL_501, Xml_6NDFL_501_Path, Xml_6NDFL_501_Xsd, Xml_6NDFL_501_NS, Xml_6NDFL_501_Name],
     [tXml_6NDFL_502, Xml_6NDFL_502_Path, Xml_6NDFL_502_Xsd, Xml_6NDFL_502_NS, Xml_6NDFL_502_Name],
+    [tXml_RSV_501, Xml_RSV_501_Path, Xml_RSV_501_Xsd, Xml_RSV_501_NS, Xml_RSV_501_Name],
+    [tXml_RSV_502, Xml_RSV_502_Path, Xml_RSV_502_Xsd, Xml_RSV_502_NS, Xml_RSV_502_Name],
     [tXml_PFR_ODB1_2019, Xml_PFR_ODB1_2019_Path, Xml_PFR_ODB1_2019_Xsd, Xml_PFR_ODB1_2019_NS, Xml_PFR_ODB1_2019_Name],
     [tXml_PFR_SZVSTAJ_2019, Xml_PFR_SZVSTAJ_2019_Path, Xml_PFR_SZVSTAJ_2019_Xsd, Xml_PFR_SZVSTAJ_2019_NS, Xml_PFR_SZVSTAJ_2019_Name],
     [tXml_PFR_SZVM_2017, Xml_PFR_SZVM_2017_Path, Xml_PFR_SZVM_2017_Xsd, Xml_PFR_SZVM_2017_NS, Xml_PFR_SZVM_2017_Name],
